@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}اجاره روزانه در مشهد - املاک هوشمند{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- AI Search & Filter Section -->
+    <div class="glass-card filter-section mb-4">
+        <form method="get" class="ai-filter-form">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    {{ form.check_in|add_class:"form-control glass-input datepicker" }}
+                </div>
+                <div class="col-md-3">
+                    {{ form.check_out|add_class:"form-control glass-input datepicker" }}
+                </div>
+                <div class="col-md-2">
+                    {{ form.capacity|add_class:"form-control glass-input" }}
+                </div>
+                <div class="col-md-2">
+                    {{ form.price_range|add_class:"form-control glass-input" }}
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-glow w-100">
+                        <i class="fas fa-search"></i> جستجوی هوشمند
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Properties Grid -->
+    <div class="row">
+        {% for property in properties %}
+        <div class="col-md-4 mb-4">
+            <div class="glass-card property-card h-100">
+                <div class="property-image">
+                    {% if property.images %}
+                    <img src="{{ property.images.url }}" alt="{{ property.title }}">
+                    {% endif %}
+                    <div class="property-badge glow-text">
+                        <i class="fas fa-calendar-alt"></i> اجاره روزانه
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title glow-text">{{ property.title }}</h5>
+                    <p class="card-text">{{ property.description|truncatewords:20 }}</p>
+                    <ul class="property-features">
+                        <li><i class="fas fa-map-marker-alt glow-icon"></i> {{ property.get_district_display }}</li>
+                        <li><i class="fas fa-ruler-combined glow-icon"></i> {{ property.area }} متر</li>
+                        <li><i class="fas fa-users glow-icon"></i> ظرفیت: {{ property.max_guests }} نفر</li>
+                        <li><i class="fas fa-money-bill-wave glow-icon"></i> شبی {{ property.daily_price|intcomma }} تومان</li>
+                    </ul>
+                    <div class="amenities mt-3">
+                        {% if property.wifi %}
+                            <span class="badge bg-glow"><i class="fas fa-wifi"></i> وای‌فای</span>
+                        {% endif %}
+                        {% if property.tv %}
+                            <span class="badge bg-glow"><i class="fas fa-tv"></i> تلویزیون</span>
+                        {% endif %}
+                        {% if property.kitchen %}
+                            <span class="badge bg-glow"><i class="fas fa-utensils"></i> آشپزخانه</span>
+                        {% endif %}
+                        {% if property.washing_machine %}
+                            <span class="badge bg-glow"><i class="fas fa-tshirt"></i> لباسشویی</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-transparent border-0">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'properties:daily_property_detail' property.id %}" class="btn btn-glow">رزرو و جزئیات</a>
+                        <button class="btn btn-outline-glow favorite-btn" data-property-id="{{ property.id }}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="glass-card text-center p-5">
+                <i class="fas fa-search fa-3x mb-3 glow-icon"></i>
+                <h3 class="glow-text">اقامتگاهی یافت نشد</h3>
+                <p>با تاریخ یا معیارهای دیگری جستجو کنید</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% include 'includes/pagination.html' %}
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .amenities .badge {
+        margin-right: 5px;
+        background: rgba(0, 242, 254, 0.1);
+        border: 1px solid var(--ai-primary);
+        color: var(--ai-primary);
+    }
+
+    .bg-glow {
+        box-shadow: var(--ai-glow);
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    $(document).ready(function() {
+        $('.datepicker').persianDatepicker({
+            format: 'YYYY/MM/DD',
+            autoClose: true,
+            initialValue: false
+        });
+    });
+</script>
+{% endblock %}

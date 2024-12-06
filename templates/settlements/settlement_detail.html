@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}جزئیات تسویه حساب {{ settlement.tracking_code }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- نوار مسیر -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'settlements:settlement-list' %}">تسویه حساب‌ها</a></li>
+            <li class="breadcrumb-item active">{{ settlement.tracking_code }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- اطلاعات اصلی -->
+        <div class="col-md-8">
+            <div class="glass-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="mb-0">جزئیات تسویه حساب</h3>
+                    <span class="badge bg-{{ settlement.status|status_color }} fs-6">
+                        {{ settlement.get_status_display }}
+                    </span>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted">کد پیگیری</label>
+                        <p class="font-monospace">{{ settlement.tracking_code }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">تاریخ درخواست</label>
+                        <p>{{ settlement.created_at|date:"Y/m/d H:i" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">مبلغ درخواستی</label>
+                        <p class="text-primary fw-bold">{{ settlement.amount|intcomma }} تومان</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">شماره شبا</label>
+                        <p class="font-monospace" dir="ltr">{{ settlement.bank_account }}</p>
+                    </div>
+                    {% if settlement.bank_reference_id %}
+                    <div class="col-md-6">
+                        <label class="text-muted">شناسه پیگیری بانکی</label>
+                        <p class="font-monospace">{{ settlement.bank_reference_id }}</p>
+                    </div>
+                    {% endif %}
+                    {% if settlement.settled_at %}
+                    <div class="col-md-6">
+                        <label class="text-muted">تاریخ تسویه</label>
+                        <p>{{ settlement.settled_at|date:"Y/m/d H:i" }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {% if settlement.rejection_reason %}
+                <div class="alert alert-danger mt-3">
+                    <h6 class="alert-heading">دلیل رد درخواست:</h6>
+                    <p class="mb-0">{{ settlement.rejection_reason }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- اطلاعات مالک -->
+            <div class="glass-card p-4">
+                <h4 class="mb-4">اطلاعات مالک</h4>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="text-muted">نام و نام خانوادگی</label>
+                        <p>{{ settlement.owner.get_full_name }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">شماره تماس</label>
+                        <p>{{ settlement.owner.phone }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted">ایمیل</label>
+                        <p>{{ settlement.owner.email }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- نوار کناری -->
+        <div class="col-md-4">
+            <!-- دکمه‌های عملیات -->
+            <div class="glass-card p-4 mb-4">
+                <h5 class="mb-3">عملیات</h5>
+                {% if settlement.status == 'pending' %}
+                    {% if user.is_staff %}
+                    <button class="btn btn-success w-100 mb-2" onclick="processSettlement()">
+                        <i class="fas fa-check"></i>
+                        تایید و پردازش
+                    </button>
+                    <button class="btn btn-danger w-100 mb-2" onclick="rejectSettlement()">
+                        <i class="fas fa-times"></i>
+                        رد درخواست
+                    </button>
+                    {% endif %}
+                    {% if user == settlement.owner %}
+                    <button class="btn btn-warning w-100" onclick="cancelSettlement()">
+                        <i class="fas fa-ban"></i>
+                        لغو درخواست
+                    </button>
+                    {% endif %}
+                {% endif %}
+                
+                {% if settlement.status == 'completed' %}
+                <a href="{% url 'settlements:settlement-print' settlement.tracking_code %}" 
+                   class="btn btn-outline-primary w-100 mb-2">
+                    <i class="fas fa-print"></i>
+                    چاپ رسید
+                </a>
+                <a href="{% url 'settlements:settlement-download' settlement.tracking_code %}" 
+                   class="btn btn-outline-secondary w-100">
+                    <i class="fas fa-download"></i>
+                    دانلود رسید
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- تاریخچه وضعیت -->
+            <div class="glass-card p-4">
+                <h5 class="mb-3">تاریخچه وضعیت</h5>
+                <div class="timeline">
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-success"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-0">ثبت درخواست</h6>
+                            <small class="text-muted">{{ settlement.created_at|date:"Y/m/d H:i" }}</small>
+                        </div>
+                    </div>
+                    {% if settlement.status != 'pending' %}
+                    <div class="timeline-item">
+                        <div class="timeline-marker bg-{{ settlement.status|status_color }}"></div>
+                        <div class="timeline-content">
+                            <h6 class="mb-0">{{ settlement.get_status_display }}</h6>
+                            <small class="text-muted">{{ settlement.updated_at|date:"Y/m/d H:i" }}</small>
+                            {% if settlement.processed_by %}
+                            <small class="d-block text-muted">
+                                توسط: {{ settlement.processed_by.get_full_name }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- اطلاعات بانکی -->
+            {% if settlement.status == 'completed' %}
+            <div class="glass-card p-4 mt-4">
+                <h5 class="mb-3">اطلاعات بانکی</h5>
+                <div class="bank-info">
+                    <div class="mb-2">
+                        <label class="text-muted">نام بانک:</label>
+                        <p class="mb-0">{{ settlement.get_bank_name_from_sheba }}</p>
+                    </div>
+                    <div class="mb-2">
+                        <label class="text-muted">شناسه پیگیری:</label>
+                        <p class="mb-0 font-monospace">{{ settlement.bank_reference_id }}</p>
+                    </div>
+                    <div>
+                        <label class="text-muted">تاریخ واریز:</label>
+                        <p class="mb-0">{{ settlement.settled_at|date:"Y/m/d H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- مودال رد درخواست -->
+<div class="modal fade" id="rejectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">رد درخواست تسویه</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="rejectForm">
+                    <div class="mb-3">
+                        <label class="form-label">دلیل رد درخواست</label>
+                        <textarea class="form-control" name="reason" rows="3" required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">انصراف</button>
+                <button type="button" class="btn btn-danger" onclick="submitReject()">تایید و رد درخواست</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.timeline {
+    position: relative;
+    padding-left: 1.5rem;
+}
+
+.timeline-item {
+    position: relative;
+    padding-bottom: 1.5rem;
+}
+
+.timeline-marker {
+    position: absolute;
+    left: -0.75rem;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 50%;
+}
+
+.timeline-item:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: -0.25rem;
+    top: 1rem;
+    bottom: 0;
+    width: 2px;
+    background: #e9ecef;
+}
+
+.bank-info label {
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+}
+
+.bank-info p {
+    color: #2c3e50;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function processSettlement() {
+    if (confirm('آیا از پردازش این تسویه اطمینان دارید؟')) {
+        fetch(`/api/settlements/{{ settlement.tracking_code }}/process/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.error || 'خطا در پردازش تسویه');
+            }
+        })
+        .catch(error => {
+            alert('خطا در ارتباط با سرور');
+        });
+    }
+}
+
+function rejectSettlement() {
+    const modal = new bootstrap.Modal(document.getElementById('rejectModal'));
+    modal.show();
+}
+
+function submitReject() {
+    const reason = document.querySelector('#rejectForm textarea[name="reason"]').value;
+    if (!reason) {
+        alert('لطفا دلیل رد درخواست را وارد کنید');
+        return;
+    }
+
+    fetch(`/api/settlements/{{ settlement.tracking_code }}/reject/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.reload();
+        } else {
+            alert(data.error || 'خطا در رد درخواست');
+        }
+    })
+    .catch(error => {
+        alert('خطا در ارتباط با سرور');
+    });
+}
+
+function cancelSettlement() {
+    if (confirm('آیا از لغو این درخواست تسویه اطمینان دارید؟')) {
+        fetch(`/api/settlements/{{ settlement.tracking_code }}/cancel/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.error || 'خطا در لغو درخواست');
+            }
+        })
+        .catch(error => {
+            alert('خطا در ارتباط با سرور');
+        });
+    }
+}
+</script>
+{% endblock %}

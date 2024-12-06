@@ -1,0 +1,205 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} - اجاره روزانه{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumb.html' %}
+
+<div class="container">
+    <div class="row">
+        <!-- تصاویر و اطلاعات اصلی -->
+        <div class="col-lg-8">
+            <div class="glass-card mb-4">
+                <div class="property-gallery">
+                    {% if property.images %}
+                        <img src="{{ property.images.url }}" class="img-fluid" alt="{{ property.title }}">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="glow-text">{{ property.title }}</h1>
+                        <button class="btn btn-outline-glow favorite-btn" data-property-id="{{ property.id }}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <p class="lead">{{ property.description }}</p>
+                </div>
+            </div>
+
+            <!-- امکانات -->
+            <div class="glass-card mb-4">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">امکانات</h3>
+                    <div class="row">
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="feature-item {% if property.wifi %}active{% endif %}">
+                                <i class="fas fa-wifi glow-icon"></i>
+                                <span>اینترنت وای‌فای</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="feature-item {% if property.tv %}active{% endif %}">
+                                <i class="fas fa-tv glow-icon"></i>
+                                <span>تلویزیون</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="feature-item {% if property.kitchen %}active{% endif %}">
+                                <i class="fas fa-utensils glow-icon"></i>
+                                <span>آشپزخانه مجهز</span>
+                            </div>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="feature-item {% if property.washing_machine %}active{% endif %}">
+                                <i class="fas fa-tshirt glow-icon"></i>
+                                <span>ماشین لباسشویی</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- جزئیات ملک -->
+            <div class="glass-card mb-4">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">مشخصات اقامتگاه</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="property-details">
+                                <li>
+                                    <i class="fas fa-ruler-combined glow-icon"></i>
+                                    <span>متراژ:</span>
+                                    {{ property.area }} متر مربع
+                                </li>
+                                <li>
+                                    <i class="fas fa-door-open glow-icon"></i>
+                                    <span>تعداد اتاق:</span>
+                                    {{ property.rooms }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-users glow-icon"></i>
+                                    <span>ظرفیت:</span>
+                                    {{ property.max_guests }} نفر
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="property-details">
+                                <li>
+                                    <i class="fas fa-clock glow-icon"></i>
+                                    <span>حداقل اقامت:</span>
+                                    {{ property.min_stay }} شب
+                                </li>
+                                <li>
+                                    <i class="fas fa-map-marker-alt glow-icon"></i>
+                                    <span>منطقه:</span>
+                                    {{ property.get_district_display }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-tag glow-icon"></i>
+                                    <span>نوع اقامتگاه:</span>
+                                    {{ property.get_property_type_display }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- موقعیت مکانی -->
+            <div class="glass-card mb-4">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">موقعیت مکانی</h3>
+                    <p>{{ property.address }}</p>
+                    <div id="map" style="height: 400px;" class="rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- رزرو -->
+        <div class="col-lg-4">
+            <div class="glass-card sticky-top" style="top: 100px;">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">رزرو اقامتگاه</h3>
+                    <div class="price-details mb-4">
+                        <div class="d-flex justify-content-between">
+                            <span>قیمت هر شب:</span>
+                            <span class="glow-text">{{ property.daily_price|intcomma }} تومان</span>
+                        </div>
+                    </div>
+
+                    <form id="bookingForm" class="booking-form">
+                        {% csrf_token %}
+                        {{ booking_form.as_p }}
+                        <button type="submit" class="btn btn-glow w-100">
+                            <i class="fas fa-calendar-check"></i> رزرو آنلاین
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/css/persian-datepicker.min.css">
+<style>
+    .feature-item {
+        text-align: center;
+        padding: 1rem;
+        border-radius: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        opacity: 0.5;
+    }
+
+    .feature-item.active {
+        opacity: 1;
+        background: rgba(0, 242, 254, 0.1);
+    }
+
+    .feature-item i {
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/persian-date@1.1.0/dist/persian-date.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/persian-datepicker@1.2.0/dist/js/persian-datepicker.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    // تنظیمات تقویم
+    $('#id_check_in, #id_check_out').persianDatepicker({
+        format: 'YYYY/MM/DD',
+        autoClose: true,
+        initialValue: false,
+        minDate: new Date()
+    });
+
+    // نقشه
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15,
+            center: { lat: YOUR_LAT, lng: YOUR_LNG }
+        });
+        
+        new google.maps.Marker({
+            position: { lat: YOUR_LAT, lng: YOUR_LNG },
+            map: map
+        });
+    }
+
+    window.addEventListener('load', initMap);
+
+    // فرم رزرو
+    $('#bookingForm').on('submit', function(e) {
+        e.preventDefault();
+        // اینجا کد مربوط به ارسال درخواست رزرو اضافه می‌شود
+    });
+</script>
+{% endblock %}

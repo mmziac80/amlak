@@ -1,0 +1,58 @@
+.property-type-card {
+    transition: transform 0.3s ease;
+    overflow: hidden;
+    height: 200px;
+}
+
+.property-type-card:hover {
+    transform: translateY(-5px);
+}
+
+.property-type-card img {
+    height: 100%;
+    object-fit: cover;
+    filter: brightness(0.7);
+}
+
+.property-type-card .btn {
+    font-size: 1.5rem;
+    padding: 15px 30px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.property-type-card .btn:hover {
+    background-color: white;
+    transform: scale(1.1);
+}
+/* استایل‌های صفحه‌بندی */
+.pagination {
+    margin-top: 2rem;
+}
+
+.page-link {
+    color: #007bff;
+    border: none;
+    padding: 0.75rem 1.25rem;
+    margin: 0 0.25rem;
+    border-radius: 25px;
+    transition: all 0.3s ease;
+}
+
+.page-link:hover {
+    background-color: #007bff;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-item.active .page-link {
+    background-color: #007bff;
+    border-color: #007bff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.page-item:first-child .page-link,
+.page-item:last-child .page-link {
+    border-radius: 25px;
+}

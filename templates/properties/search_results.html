@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}نتایج جستجو - املاک هوشمند{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <!-- هدر جستجو -->
+    <div class="glass-card mb-4">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="glow-text mb-3">نتایج جستجو</h1>
+                    <p class="lead">{{ properties.count }} نتیجه برای "{{ request.GET.q }}"</p>
+                </div>
+                <div class="col-lg-6">
+                    <form class="search-form" method="get">
+                        <div class="input-group">
+                            <input type="text" name="q" class="form-control glass-input" 
+                                   value="{{ request.GET.q }}" placeholder="جستجوی مجدد...">
+                            <button type="submit" class="btn btn-glow">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- فیلترهای جستجو -->
+    <div class="glass-card mb-4">
+        <div class="card-body">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <select class="form-select glass-input" name="property_type">
+                        <option value="">نوع ملک</option>
+                        {% for value, label in property_types %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select glass-input" name="district">
+                        <option value="">منطقه</option>
+                        {% for value, label in districts %}
+                            <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select glass-input" name="sort">
+                        <option value="">مرتب‌سازی</option>
+                        <option value="price_low">قیمت: کم به زیاد</option>
+                        <option value="price_high">قیمت: زیاد به کم</option>
+                        <option value="date_new">جدیدترین</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-glow w-100">اعمال فیلترها</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- نتایج جستجو -->
+    {% if properties %}
+        <div class="row">
+            {% for property in properties %}
+                <div class="col-md-6 col-lg-4 mb-4">
+                    {% include 'includes/property_card.html' with property=property %}
+                </div>
+            {% endfor %}
+        </div>
+        {% include 'includes/pagination.html' with page_obj=properties %}
+    {% else %}
+        <div class="glass-card text-center py-5">
+            <i class="fas fa-search fa-3x mb-3 glow-icon"></i>
+            <h3 class="glow-text">نتیجه‌ای یافت نشد</h3>
+            <p>لطفاً با کلمات کلیدی دیگری جستجو کنید</p>
+            <a href="{% url 'properties:home' %}" class="btn btn-outline-glow mt-3">
+                بازگشت به صفحه اصلی
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .search-form .input-group {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 25px;
+        overflow: hidden;
+    }
+
+    .search-form .form-control {
+        border: none;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .search-form .btn {
+        padding: 0.75rem 1.5rem;
+        border-radius: 0 25px 25px 0;
+    }
+</style>
+{% endblock %}

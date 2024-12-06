@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}لیست املاک - املاک هوشمند{% endblock %}
+
+{% block content %}
+<!-- هدر صفحه -->
+<div class="glass-card page-header mb-4">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="glow-text">{{ page_title }}</h1>
+                <p class="lead">{{ properties.count }} ملک یافت شد</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="d-flex justify-content-end gap-2">
+                    <button class="btn btn-outline-glow" data-bs-toggle="modal" data-bs-target="#filtersModal">
+                        <i class="fas fa-filter"></i> فیلترها
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-glow dropdown-toggle" data-bs-toggle="dropdown">
+                            <i class="fas fa-sort"></i> مرتب‌سازی
+                        </button>
+                        <ul class="dropdown-menu glass-card">
+                            <li><a class="dropdown-item" href="?sort=price_low">قیمت: کم به زیاد</a></li>
+                            <li><a class="dropdown-item" href="?sort=price_high">قیمت: زیاد به کم</a></li>
+                            <li><a class="dropdown-item" href="?sort=date_new">جدیدترین</a></li>
+                            <li><a class="dropdown-item" href="?sort=date_old">قدیمی‌ترین</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- لیست املاک -->
+<div class="container">
+    <div class="row">
+        <!-- فیلترهای کناری -->
+        <div class="col-lg-3">
+            <div class="glass-card sticky-top" style="top: 100px;">
+                <div class="card-body">
+                    <h5 class="glow-text mb-4">فیلترها</h5>
+                    <form method="get" class="filter-form">
+                        <!-- نوع ملک -->
+                        <div class="mb-3">
+                            <label class="form-label">نوع ملک</label>
+                            {{ form.property_type }}
+                        </div>
+
+                        <!-- منطقه -->
+                        <div class="mb-3">
+                            <label class="form-label">منطقه</label>
+                            {{ form.district }}
+                        </div>
+
+                        <!-- محدوده قیمت -->
+                        <div class="mb-3">
+                            <label class="form-label">محدوده قیمت</label>
+                            <div id="priceRange"></div>
+                            <div class="price-inputs mt-2">
+                                {{ form.min_price }}
+                                {{ form.max_price }}
+                            </div>
+                        </div>
+
+                        <!-- متراژ -->
+                        <div class="mb-3">
+                            <label class="form-label">متراژ</label>
+                            <div id="areaRange"></div>
+                            <div class="area-inputs mt-2">
+                                {{ form.min_area }}
+                                {{ form.max_area }}
+                            </div>
+                        </div>
+
+                        <!-- امکانات -->
+                        <div class="mb-3">
+                            <label class="form-label">امکانات</label>
+                            <div class="features-list">
+                                {{ form.parking }}
+                                {{ form.elevator }}
+                                {{ form.storage }}
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-glow w-100">
+                            <i class="fas fa-search"></i> اعمال فیلترها
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- لیست املاک -->
+        <div class="col-lg-9">
+            {% if properties %}
+                <div class="row">
+                    {% for property in properties %}
+                        <div class="col-md-6 col-lg-4 mb-4">
+                            {% include 'includes/property_card.html' with property=property %}
+                        </div>
+                    {% endfor %}
+                </div>
+                {% include 'includes/pagination.html' with page_obj=properties %}
+            {% else %}
+                <div class="glass-card text-center py-5">
+                    <i class="fas fa-search fa-3x mb-3 glow-icon"></i>
+                    <h3 class="glow-text">ملکی یافت نشد</h3>
+                    <p>لطفاً فیلترهای خود را تغییر دهید</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% include 'includes/filters_modal.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.css">
+<style>
+    .filter-form .form-control,
+    .filter-form .form-select {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(255, 255, 255, 0.1);
+        color: #fff;
+    }
+
+    .features-list {
+        display: grid;
+        gap: 0.5rem;
+    }
+
+    .features-list .form-check {
+        margin: 0;
+    }
+
+    .noUi-connect {
+        background: var(--ai-primary);
+    }
+
+    .noUi-handle {
+        background: var(--ai-secondary);
+        border: 2px solid var(--ai-primary);
+        box-shadow: var(--ai-glow);
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/nouislider@14.6.3/distribute/nouislider.min.js"></script>
+<script>
+    // اسلایدرهای قیمت و متراژ
+    const priceRange = document.getElementById('priceRange');
+    const areaRange = document.getElementById('areaRange');
+
+    noUiSlider.create(priceRange, {
+        start: [0, 1000000000],
+        connect: true,
+        direction: 'rtl',
+        range: {
+            'min': 0,
+            'max': 1000000000
+        },
+        format: wNumb({
+            decimals: 0,
+            thousand: ','
+        })
+    });
+
+    noUiSlider.create(areaRange, {
+        start: [0, 500],
+        connect: true,
+        direction: 'rtl',
+        range: {
+            'min': 0,
+            'max': 500
+        },
+        format: wNumb({
+            decimals: 0
+        })
+    });
+
+    // آپدیت مقادیر input ها
+    priceRange.noUiSlider.on('update', function(values) {
+        document.getElementById('id_min_price').value = values[0];
+        document.getElementById('id_max_price').value = values[1];
+    });
+
+    areaRange.noUiSlider.on('update', function(values) {
+        document.getElementById('id_min_area').value = values[0];
+        document.getElementById('id_max_area').value = values[1];
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,175 @@
+/* استایل‌های پایه */
+@font-face {
+    font-family: 'Vazir';
+    src: url('/static/fonts/Vazir.woff2') format('woff2');
+}
+
+body {
+    font-family: 'Vazir', sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* هدر و منو */
+.navbar {
+    background: linear-gradient(to right, #242220, #292624);
+    padding: 15px 0;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.navbar-brand {
+    color: white !important;
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.nav-link {
+    color: white !important;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+}
+
+/* کارت‌های املاک */
+.card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.card-img-top {
+    border-radius: 12px 12px 0 0;
+    height: 200px;
+    object-fit: cover;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.card-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+/* فرم‌ها و فیلترها */
+.daily-rent-filters {
+    position: sticky;
+    top: 20px;
+}
+
+.form-control {
+    border-radius: 8px;
+    padding: 12px 15px;
+    border: 1px solid #dee2e6;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* تقویم شمسی */
+.datepicker-plot-area {
+    font-family: 'Vazir', sans-serif;
+    background-color: #fff;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    padding: 15px;
+}
+
+.datepicker-plot-area .datepicker-header {
+    background-color: transparent;
+    padding: 10px;
+}
+
+.datepicker-plot-area .datepicker-day-view .table-days td span {
+    border-radius: 8px;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 14px;
+}
+
+.datepicker-plot-area .datepicker-day-view .table-days td.selected span {
+    background-color: #0d6efd;
+    color: white;
+    font-weight: bold;
+}
+
+/* دکمه‌ها */
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0b5ed7, #0a58ca);
+    transform: translateY(-2px);
+}
+
+/* مودال رزرو */
+.modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+    background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    border-radius: 12px 12px 0 0;
+    padding: 20px;
+}
+
+.modal-body {
+    padding: 25px;
+}
+
+.booking-summary {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* فوتر */
+footer {
+    background: linear-gradient(to right, #22201f, #252323);
+    color: white;
+    padding: 40px 0;
+    margin-top: 50px;
+}
+
+footer h5 {
+    font-size: 20px;
+    margin-bottom: 20px;
+    color: #fff;
+}
+
+footer p {
+    color: rgba(255,255,255,0.8);
+    line-height: 1.8;
+}
+
+/* انیمیشن‌ها */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.5s ease-out;
+}

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}املاک هوشمند مشهد - خرید، فروش و اجاره ملک{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="glow-text display-4 mb-4">جستجوی هوشمند املاک در مشهد</h1>
+                <p class="lead mb-4">با استفاده از هوش مصنوعی، ملک مورد نظر خود را پیدا کنید</p>
+                <div class="search-box glass-card p-3">
+                    <form action="{% url 'properties:property_search' %}" method="get">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <select name="deal_type" class="form-select glass-input">
+                                    <option value="">نوع معامله</option>
+                                    <option value="sale">خرید</option>
+                                    <option value="rent">اجاره</option>
+                                    <option value="daily">اجاره روزانه</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <input type="text" name="q" class="form-control glass-input" placeholder="جستجو در عنوان، توضیحات و آدرس...">
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-glow w-100">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="ai-animation">
+                    <!-- اینجا انیمیشن AI قرار می‌گیرد -->
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Properties -->
+<section class="featured-section py-5">
+    <div class="container">
+        <!-- املاک فروشی -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="glow-text">املاک فروشی برتر</h2>
+                <a href="{% url 'properties:sale_properties' %}" class="btn btn-outline-glow">
+                    مشاهده همه <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="row">
+                {% for property in sale_properties %}
+                    <div class="col-md-4 mb-4">
+                        {% include 'includes/property_card.html' with property=property %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- املاک اجاره‌ای -->
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="glow-text">املاک اجاره‌ای برتر</h2>
+                <a href="{% url 'properties:rent_properties' %}" class="btn btn-outline-glow">
+                    مشاهده همه <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="row">
+                {% for property in rent_properties %}
+                    <div class="col-md-4 mb-4">
+                        {% include 'includes/property_card.html' with property=property %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- اقامتگاه‌های روزانه -->
+        <div>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="glow-text">اقامتگاه‌های روزانه برتر</h2>
+                <a href="{% url 'properties:daily_properties' %}" class="btn btn-outline-glow">
+                    مشاهده همه <i class="fas fa-arrow-left"></i>
+                </a>
+            </div>
+            <div class="row">
+                {% for property in daily_properties %}
+                    <div class="col-md-4 mb-4">
+                        {% include 'includes/property_card.html' with property=property %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section py-5">
+    <div class="container">
+        <h2 class="glow-text text-center mb-5">ویژگی‌های املاک هوشمند</h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="glass-card feature-card text-center p-4">
+                    <i class="fas fa-brain glow-icon mb-3 fa-3x"></i>
+                    <h3 class="glow-text">جستجوی هوشمند</h3>
+                    <p>با استفاده از هوش مصنوعی، بهترین گزینه‌ها را پیدا کنید</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="glass-card feature-card text-center p-4">
+                    <i class="fas fa-shield-alt glow-icon mb-3 fa-3x"></i>
+                    <h3 class="glow-text">امنیت بالا</h3>
+                    <p>معاملات امن و مطمئن با تضمین بازگشت وجه</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="glass-card feature-card text-center p-4">
+                    <i class="fas fa-clock glow-icon mb-3 fa-3x"></i>
+                    <h3 class="glow-text">رزرو آنلاین</h3>
+                    <p>رزرو آنلاین و آنی اقامتگاه‌های روزانه</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .hero-section {
+        min-height: 80vh;
+        display: flex;
+        align-items: center;
+        background: linear-gradient(45deg, var(--ai-darker), var(--ai-dark));
+        padding: 4rem 0;
+    }
+
+    .feature-card {
+        transition: transform 0.3s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-10px);
+    }
+
+    .ai-animation {
+        
+        /* اینجا استایل‌های انیمیشن AI اضافه می‌شود */
+        
+    position: relative;
+    height: 400px;
+    background: url('/static/images/ai-animation.svg') no-repeat center;
+    background-size: contain;
+    animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+    0% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-20px);
+    }
+    100% {
+        transform: translateY(0px);
+    }
+}    
+</style>
+{% endblock %}

@@ -1,0 +1,132 @@
+  {% extends 'base.html' %}
+  {% load static %}
+
+  {% block content %}
+  <div class="container mt-5">
+      <div class="row">
+          <div class="col-md-12">
+              <div class="card">
+                  <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                      <h4 class="mb-0">تاریخچه پرداخت‌ها</h4>
+                      <div class="filters">
+                          <form method="get" class="row g-3">
+                              <div class="col-auto">
+                                  {{ form.status }}
+                              </div>
+                              <div class="col-auto">
+                                  {{ form.date_from }}
+                              </div>
+                              <div class="col-auto">
+                                  {{ form.date_to }}
+                              </div>
+                              <div class="col-auto">
+                                  <button type="submit" class="btn btn-primary">فیلتر</button>
+                              </div>
+                          </form>
+                      </div>
+                  </div>
+                  <div class="card-body">
+                      {% if payments %}
+                          <div class="table-responsive">
+                              <table class="table table-hover">
+                                  <thead>
+                                      <tr>
+                                          <th>شماره پرداخت</th>
+                                          <th>اقامتگاه</th>
+                                          <th>مبلغ (تومان)</th>
+                                          <th>وضعیت</th>
+                                          <th>تاریخ</th>
+                                          <th>کد پیگیری</th>
+                                          <th>عملیات</th>
+                                      </tr>
+                                  </thead>
+                                  <tbody>
+                                      {% for payment in payments %}
+                                      <tr>
+                                          <td>{{ payment.id }}</td>
+                                          <td>
+                                              <a href="{% url 'daily_property_detail' payment.booking.property.id %}">
+                                                  {{ payment.booking.property.title }}
+                                              </a>
+                                          </td>
+                                          <td>{{ payment.amount|intcomma }}</td>
+                                          <td>
+                                              <span class="badge {% if payment.status == 'success' %}bg-success
+                                                  {% elif payment.status == 'pending' %}bg-warning
+                                                  {% else %}bg-danger{% endif %}">
+                                                  {{ payment.get_status_display }}
+                                              </span>
+                                          </td>
+                                          <td>{{ payment.created_at|date:"Y/m/d H:i" }}</td>
+                                          <td>{{ payment.tracking_code|default:"-" }}</td>
+                                          <td>
+                                              <div class="btn-group">
+                                                  <a href="{% url 'payments:payment_detail' payment.id %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                      جزئیات
+                                                  </a>
+                                                  {% if payment.status == 'pending' %}
+                                                      <a href="{% url 'payments:payment_init' payment.booking.id %}" 
+                                                       class="btn btn-sm btn-primary">
+                                                          پرداخت مجدد
+                                                      </a>
+                                                  {% endif %}
+                                              </div>
+                                          </td>
+                                      </tr>
+                                      {% endfor %}
+                                  </tbody>
+                              </table>
+                          </div>
+                        
+                          <!-- پیجینیشن -->
+                          {% if payments.has_other_pages %}
+                          <nav aria-label="Page navigation" class="mt-4">
+                              <ul class="pagination justify-content-center">
+                                  {% if payments.has_previous %}
+                                      <li class="page-item">
+                                          <a class="page-link" href="?page={{ payments.previous_page_number }}">قبلی</a>
+                                      </li>
+                                  {% endif %}
+                                
+                                  {% for i in payments.paginator.page_range %}
+                                      <li class="page-item {% if payments.number == i %}active{% endif %}">
+                                          <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+                                      </li>
+                                  {% endfor %}
+                                
+                                  {% if payments.has_next %}
+                                      <li class="page-item">
+                                          <a class="page-link" href="?page={{ payments.next_page_number }}">بعدی</a>
+                                      </li>
+                                  {% endif %}
+                              </ul>
+                          </nav>
+                          {% endif %}
+                      {% else %}
+                          <div class="text-center py-5">
+                              <i class="bi bi-credit-card display-1 text-muted"></i>
+                              <p class="mt-3">هنوز هیچ پرداختی انجام نشده است</p>
+                          </div>
+                      {% endif %}
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  {% endblock %}
+
+  {% block extra_css %}
+  <style>
+      .badge {
+          padding: 8px 12px;
+          font-weight: 500;
+      }
+      .table th {
+          font-weight: 500;
+      }
+      .btn-group .btn {
+          margin: 0 2px;
+      }
+  </style>
+  {% endblock %}

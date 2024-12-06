@@ -1,0 +1,153 @@
+<footer class="footer glass-card mt-5">
+    <div class="container py-5">
+        <div class="row g-4">
+            <!-- لوگو و توضیحات -->
+            <div class="col-lg-4">
+                <h3 class="glow-text mb-4">
+                    <i class="fas fa-building"></i> املاک هوشمند مشهد
+                </h3>
+                <p class="mb-4">سامانه هوشمند خرید، فروش و اجاره املاک در مشهد با استفاده از هوش مصنوعی</p>
+                <div class="social-links">
+                    <a href="#" class="social-link">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-telegram"></i>
+                    </a>
+                    <a href="#" class="social-link">
+                        <i class="fab fa-whatsapp"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- دسترسی سریع -->
+            <div class="col-lg-2">
+                <h5 class="glow-text mb-4">دسترسی سریع</h5>
+                <ul class="footer-links">
+                    <li><a href="{% url 'properties:sale_properties' %}">خرید ملک</a></li>
+                    <li><a href="{% url 'properties:rent_properties' %}">اجاره ملک</a></li>
+                    <li><a href="{% url 'properties:daily_properties' %}">اقامت روزانه</a></li>
+                    <li><a href="{% url 'about' %}">درباره ما</a></li>
+                    <li><a href="{% url 'contact' %}">تماس با ما</a></li>
+                </ul>
+            </div>
+
+            <!-- مناطق پرطرفدار -->
+            <div class="col-lg-3">
+                <h5 class="glow-text mb-4">مناطق پرطرفدار</h5>
+                <ul class="footer-links">
+                    <li><a href="#">منطقه ثامن</a></li>
+                    <li><a href="#">احمدآباد</a></li>
+                    <li><a href="#">وکیل‌آباد</a></li>
+                    <li><a href="#">طرقبه</a></li>
+                    <li><a href="#">شاندیز</a></li>
+                </ul>
+            </div>
+
+            <!-- تماس با ما -->
+            <div class="col-lg-3">
+                <h5 class="glow-text mb-4">تماس با ما</h5>
+                <ul class="contact-info">
+                    <li>
+                        <i class="fas fa-map-marker-alt glow-icon"></i>
+                        مشهد، بلوار سجاد، پلاک 123
+                    </li>
+                    <li>
+                        <i class="fas fa-phone glow-icon"></i>
+                        051-3333333
+                    </li>
+                    <li>
+                        <i class="fas fa-envelope glow-icon"></i>
+                        info@amlak-mashhad.com
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- کپی‌رایت -->
+    <div class="copyright">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">
+                        © تمامی حقوق برای املاک هوشمند مشهد محفوظ است
+                    </p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="mb-0">
+                        طراحی و توسعه با <i class="fas fa-heart glow-icon"></i> توسط تیم AI
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<style>
+    .footer {
+        margin-top: auto;
+    }
+
+    .social-links {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .social-link {
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--ai-primary);
+        transition: all 0.3s ease;
+    }
+
+    .social-link:hover {
+        background: var(--ai-primary);
+        color: var(--ai-dark);
+        transform: translateY(-3px);
+    }
+
+    .footer-links {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .footer-links li {
+        margin-bottom: 0.5rem;
+    }
+
+    .footer-links a {
+        color: rgba(255, 255, 255, 0.8);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+
+    .footer-links a:hover {
+        color: var(--ai-primary);
+        padding-right: 0.5rem;
+    }
+
+    .contact-info {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .contact-info li {
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .copyright {
+        padding: 1.5rem 0;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+</style>

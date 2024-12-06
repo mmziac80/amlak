@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}جزئیات رزرو - {{ booking.property.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="glass-card">
+                <div class="card-body">
+                    <h2 class="glow-text mb-4">جزئیات رزرو</h2>
+                    
+                    <!-- وضعیت رزرو -->
+                    <div class="booking-status mb-4">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="status-label">وضعیت رزرو:</span>
+                            <span class="status-badge status-{{ booking.status }}">
+                                {{ booking.get_status_display }}
+                            </span>
+                        </div>
+                        {% if booking.status == 'pending' %}
+                            <div class="alert glass-card mt-3">
+                                <i class="fas fa-info-circle glow-icon"></i>
+                                لطفاً در مدت ۳۰ دقیقه نسبت به پرداخت اقدام نمایید.
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- اطلاعات اقامتگاه -->
+                    <div class="property-info mb-4">
+                        <h3 class="glow-text mb-3">اطلاعات اقامتگاه</h3>
+                        <div class="glass-card p-3">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    {% if booking.property.images %}
+                                        <img src="{{ booking.property.images.url }}" class="img-fluid rounded" alt="{{ booking.property.title }}">
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-8">
+                                    <h4>{{ booking.property.title }}</h4>
+                                    <p><i class="fas fa-map-marker-alt glow-icon"></i> {{ booking.property.address }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- جزئیات رزرو -->
+                    <div class="booking-details mb-4">
+                        <h3 class="glow-text mb-3">جزئیات رزرو</h3>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="booking-info-list">
+                                    <li>
+                                        <i class="fas fa-calendar-check glow-icon"></i>
+                                        <span>تاریخ ورود:</span>
+                                        {{ booking.check_in|date:"Y/m/d" }}
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-calendar-times glow-icon"></i>
+                                        <span>تاریخ خروج:</span>
+                                        {{ booking.check_out|date:"Y/m/d" }}
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="booking-info-list">
+                                    <li>
+                                        <i class="fas fa-users glow-icon"></i>
+                                        <span>تعداد مهمان:</span>
+                                        {{ booking.guests_count }} نفر
+                                    </li>
+                                    <li>
+                                        <i class="fas fa-moon glow-icon"></i>
+                                        <span>مدت اقامت:</span>
+                                        {{ booking.total_nights }} شب
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- اطلاعات مالی -->
+                    <div class="payment-details">
+                        <h3 class="glow-text mb-3">اطلاعات مالی</h3>
+                        <div class="glass-card p-3">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>قیمت هر شب:</span>
+                                <span>{{ booking.property.daily_price|intcomma }} تومان</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>تعداد شب:</span>
+                                <span>{{ booking.total_nights }} شب</span>
+                            </div>
+                            <hr class="border-light">
+                            <div class="d-flex justify-content-between">
+                                <span class="fw-bold">مبلغ کل:</span>
+                                <span class="glow-text fw-bold">{{ booking.total_price|intcomma }} تومان</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- دکمه‌های عملیات -->
+                    <div class="booking-actions mt-4">
+                        {% if booking.status == 'pending' %}
+                            <a href="{% url 'payments:payment_init' booking.id %}" class="btn btn-glow w-100">
+                                <i class="fas fa-credit-card"></i> پرداخت آنلاین
+                            </a>
+                        {% elif booking.status == 'paid' %}
+                            <a href="#" class="btn btn-outline-glow w-100" onclick="printBookingVoucher()">
+                                <i class="fas fa-print"></i> چاپ واچر
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .status-badge {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .status-pending {
+        background: rgba(255, 193, 7, 0.2);
+        color: #ffc107;
+    }
+
+    .status-paid {
+        background: rgba(40, 167, 69, 0.2);
+        color: #28a745;
+    }
+
+    .status-cancelled {
+        background: rgba(220, 53, 69, 0.2);
+        color: #dc3545;
+    }
+
+    .booking-info-list {
+        list-style: none;
+        padding: 0;
+    }
+
+    .booking-info-list li {
+        margin-bottom: 1rem;
+    }
+
+    .booking-info-list i {
+        margin-left: 0.5rem;
+        width: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    function printBookingVoucher() {
+        window.print();
+    }
+</script>
+{% endblock %}

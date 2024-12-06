@@ -1,0 +1,64 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card text-center">
+                <div class="card-body py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle text-success display-1"></i>
+                    </div>
+                    <h3 class="card-title mb-4">پرداخت موفق</h3>
+                    <div class="payment-details mb-4">
+                        <p class="mb-2">کد پیگیری: <strong>{{ payment.tracking_code }}</strong></p>
+                        <p class="mb-2">مبلغ پرداختی: <strong>{{ payment.amount|intcomma }} تومان</strong></p>
+                        <p class="mb-2">تاریخ پرداخت: <strong>{{ payment.created_at|date:"Y/m/d H:i" }}</strong></p>
+                    </div>
+                    <div class="booking-details mb-4">
+                        <h5>اطلاعات رزرو</h5>
+                        <p class="mb-2">اقامتگاه: <strong>{{ payment.booking.property.title }}</strong></p>
+                        <p class="mb-2">تاریخ ورود: <strong>{{ payment.booking.check_in }}</strong></p>
+                        <p class="mb-2">تاریخ خروج: <strong>{{ payment.booking.check_out }}</strong></p>
+                        <p class="mb-2">تعداد مهمان: <strong>{{ payment.booking.guests_count }} نفر</strong></p>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'payments:payment_detail' payment.id %}" class="btn btn-primary">
+                            مشاهده جزئیات
+                        </a>
+                        <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-primary">
+                            تاریخچه پرداخت‌ها
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .bi-check-circle {
+        animation: scale-in 0.5s ease-out;
+    }
+    @keyframes scale-in {
+        0% { transform: scale(0); }
+        70% { transform: scale(1.2); }
+        100% { transform: scale(1); }
+    }
+    .payment-details, .booking-details {
+        background-color: #f8f9fa;
+        padding: 1rem;
+        border-radius: 8px;
+    }
+    .payment-details p, .booking-details p {
+        color: #666;
+    }
+    .payment-details strong, .booking-details strong {
+        color: #212529;
+    }
+</style>
+{% endblock %}

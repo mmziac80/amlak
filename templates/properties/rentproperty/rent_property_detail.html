@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} - املاک هوشمند{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumb.html' %}
+
+<div class="container">
+    <div class="row">
+        <!-- تصاویر و اطلاعات اصلی -->
+        <div class="col-lg-8">
+            <div class="glass-card mb-4">
+                <div class="property-gallery">
+                    {% if property.images %}
+                        <img src="{{ property.images.url }}" class="img-fluid" alt="{{ property.title }}">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h1 class="glow-text">{{ property.title }}</h1>
+                        <button class="btn btn-outline-glow favorite-btn" data-property-id="{{ property.id }}">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                    </div>
+                    <p class="lead">{{ property.description }}</p>
+                </div>
+            </div>
+
+            <!-- جزئیات ملک -->
+            <div class="glass-card mb-4">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">مشخصات ملک</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="property-details">
+                                <li>
+                                    <i class="fas fa-ruler-combined glow-icon"></i>
+                                    <span>متراژ:</span>
+                                    {{ property.area }} متر مربع
+                                </li>
+                                <li>
+                                    <i class="fas fa-door-open glow-icon"></i>
+                                    <span>تعداد اتاق:</span>
+                                    {{ property.rooms }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-building glow-icon"></i>
+                                    <span>طبقه:</span>
+                                    {{ property.floor }} از {{ property.total_floors }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="property-details">
+                                <li>
+                                    <i class="fas fa-map-marker-alt glow-icon"></i>
+                                    <span>منطقه:</span>
+                                    {{ property.get_district_display }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-calendar-alt glow-icon"></i>
+                                    <span>تاریخ ثبت:</span>
+                                    {{ property.created_at|date:"Y/m/d" }}
+                                </li>
+                                <li>
+                                    <i class="fas fa-tag glow-icon"></i>
+                                    <span>نوع ملک:</span>
+                                    {{ property.get_property_type_display }}
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- موقعیت مکانی -->
+            <div class="glass-card mb-4">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">موقعیت مکانی</h3>
+                    <p>{{ property.address }}</p>
+                    <div id="map" style="height: 400px;" class="rounded"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- قیمت و درخواست بازدید -->
+        <div class="col-lg-4">
+            <div class="glass-card sticky-top" style="top: 100px;">
+                <div class="card-body">
+                    <h3 class="glow-text mb-4">شرایط اجاره</h3>
+                    <div class="price-details mb-4">
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>ودیعه:</span>
+                            <span class="glow-text">{{ property.deposit|intcomma }} تومان</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>اجاره ماهیانه:</span>
+                            <span class="glow-text">{{ property.rent|intcomma }} تومان</span>
+                        </div>
+                    </div>
+
+                    <form method="post" action="{% url 'properties:visit_request' property.id %}" class="visit-form">
+                        {% csrf_token %}
+                        <h4 class="glow-text mb-3">درخواست بازدید</h4>
+                        {{ visit_form.as_p }}
+                        <button type="submit" class="btn btn-glow w-100">
+                            <i class="fas fa-calendar-check"></i> ثبت درخواست
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 15,
+            center: { lat: YOUR_LAT, lng: YOUR_LNG }
+        });
+        
+        new google.maps.Marker({
+            position: { lat: YOUR_LAT, lng: YOUR_LNG },
+            map: map
+        });
+    }
+
+    window.addEventListener('load', initMap);
+</script>
+{% endblock %}

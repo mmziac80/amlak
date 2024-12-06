@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}خطای سرور{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="text-danger">500</h1>
+    <h2>خطای سرور</h2>
+    <p>متأسفانه خطایی در سرور رخ داده است. لطفاً بعداً دوباره تلاش کنید.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">بازگشت به صفحه اصلی</a>
+</div>
+{% endblock %}

@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}{{ property.title }} - املاک هوشمند{% endblock %}
+
+{% block content %}
+{% include 'includes/breadcrumb.html' %}
+
+<div class="container">
+    <div class="row">
+        <!-- گالری تصاویر پیشرفته -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card property-gallery">
+                <div class="main-image">
+                    {% if property.images %}
+                        <img src="{{ property.images.url }}" class="img-fluid main-img" alt="{{ property.title }}">
+                    {% endif %}
+                </div>
+                <div class="thumbnail-gallery">
+                    {% for image in property.additional_images.all %}
+                        <div class="thumb-item">
+                            <img src="{{ image.url }}" alt="تصویر {{ forloop.counter }}" onclick="changeMainImage(this.src)">
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- اطلاعات قیمت و تماس -->
+        <div class="col-lg-4 mb-4">
+            <div class="glass-card p-4">
+                <h3 class="glow-text mb-4">اطلاعات قیمت و تماس</h3>
+                <div class="price-info">
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>قیمت کل:</span>
+                        <span class="glow-text">{{ property.price|intcomma }} تومان</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>قیمت هر متر:</span>
+                        <span class="glow-text">{{ property.price_per_meter|intcomma }} تومان</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span>کد ملک:</span>
+                        <span class="glow-text">{{ property.property_code }}</span>
+                    </div>
+                </div>
+                
+                <div class="contact-buttons">
+                    <button class="btn btn-glow w-100 mb-2" data-bs-toggle="modal" data-bs-target="#visitModal">
+                        <i class="fas fa-calendar-check"></i> درخواست بازدید
+                    </button>
+                    <button class="btn btn-glow w-100 mb-2" data-bs-toggle="modal" data-bs-target="#contactModal">
+                        <i class="fas fa-phone"></i> تماس با مشاور
+                    </button>
+                    {% if user.is_authenticated %}
+                        <button class="btn btn-outline-glow w-100" id="favoriteBtn" onclick="addToFavorites({{ property.id }})">
+                            <i class="fas fa-heart"></i> افزودن به علاقه‌مندی‌ها
+                        </button>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-outline-glow w-100">
+                            <i class="fas fa-heart"></i> ورود برای افزودن به علاقه‌مندی‌ها
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- جزئیات ملک -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4">
+                <h3 class="glow-text mb-4">مشخصات ملک</h3>
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <ul class="property-details">
+                            <li>
+                                <i class="fas fa-ruler-combined glow-icon"></i>
+                                <span>متراژ:</span>
+                                {{ property.area }} متر
+                            </li>
+                            <li>
+                                <i class="fas fa-door-open glow-icon"></i>
+                                <span>تعداد اتاق:</span>
+                                {{ property.rooms }}
+                            </li>
+                            <li>
+                                <i class="fas fa-building glow-icon"></i>
+                                <span>طبقه:</span>
+                                {{ property.floor }} از {{ property.total_floors }}
+                            </li>
+                            <li>
+                                <i class="fas fa-calendar-alt glow-icon"></i>
+                                <span>سن بنا:</span>
+                                {{ property.building_age }} سال
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="property-details">
+                            <li>
+                                <i class="fas fa-map-marker-alt glow-icon"></i>
+                                <span>منطقه:</span>
+                                {{ property.get_district_display }}
+                            </li>
+                            <li>
+                                <i class="fas fa-home glow-icon"></i>
+                                <span>نوع ملک:</span>
+                                {{ property.get_property_type_display }}
+                            </li>
+                            <li>
+                                <i class="fas fa-parking glow-icon"></i>
+                                <span>پارکینگ:</span>
+                                {{ property.parking_count }} عدد
+                            </li>
+                            <li>
+                                <i class="fas fa-warehouse glow-icon"></i>
+                                <span>انباری:</span>
+                                {% if property.has_storage %}دارد{% else %}ندارد{% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- امکانات -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4">
+                <h3 class="glow-text mb-4">امکانات</h3>
+                <div class="row g-3">
+                    {% for feature in property.features.all %}
+                    <div class="col-md-4">
+                        <div class="feature-item">
+                            <i class="{{ feature.icon }} glow-icon"></i>
+                            <span>{{ feature.name }}</span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- موقعیت مکانی -->
+        <div class="col-lg-8 mb-4">
+            <div class="glass-card p-4">
+                <h3 class="glow-text mb-4">موقعیت مکانی</h3>
+                <div id="propertyMap" style="height: 400px;"></div>
+            </div>
+        </div>
+
+        <!-- توضیحات -->
+        <div class="col-lg-8">
+            <div class="glass-card p-4">
+                <h3 class="glow-text mb-4">توضیحات</h3>
+                <p>{{ property.description|linebreaks }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'includes/visit_modal.html' %}
+{% include 'includes/contact_modal.html' %}
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css">
+<style>
+    .property-gallery {
+        overflow: hidden;
+        border-radius: 15px;
+    }
+
+    .main-image {
+        position: relative;
+        height: 400px;
+        overflow: hidden;
+    }
+
+    .main-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .thumbnail-gallery {
+        display: flex;
+        gap: 10px;
+        margin-top: 10px;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+
+    .thumb-item {
+        flex: 0 0 100px;
+        height: 70px;
+        cursor: pointer;
+    }
+
+    .thumb-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: 5px;
+        transition: opacity 0.3s;
+    }
+
+    .thumb-item img:hover {
+        opacity: 0.8;
+    }
+
+    .property-details {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .property-details li {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+    }
+
+    .property-details span {
+        color: rgba(255, 255, 255, 0.7);
+        margin-left: 0.5rem;
+    }
+
+    .price-info {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 10px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+    }
+
+    .glow-icon {
+        color: var(--ai-primary);
+        font-size: 1.2rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    // تابع تغییر تصویر اصلی
+    function changeMainImage(src) {
+        document.querySelector('.main-img').src = src;
+    }
+
+    // نقشه
+    function initMap() {
+        const map = L.map('propertyMap').setView([{{ property.latitude }}, {{ property.longitude }}], 15);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        L.marker([{{ property.latitude }}, {{ property.longitude }}]).addTo(map);
+    }
+
+    // علاقه‌مندی‌ها
+    function addToFavorites(propertyId) {
+        fetch(`/api/properties/${propertyId}/favorite/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const btn = document.getElementById('favoriteBtn');
+                btn.classList.toggle('active');
+                showToast('ملک به علاقه‌مندی‌ها اضافه شد');
+            }
+        })
+        .catch(error => {
+            showToast('خطا در افزودن به علاقه‌مندی‌ها', 'error');
+        });
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // اجرای توابع
+    document.addEventListener('DOMContentLoaded', function() {
+        initMap();
+    });
+</script>
+{% endblock %}

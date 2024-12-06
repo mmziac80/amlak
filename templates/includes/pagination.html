@@ -1,0 +1,69 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="ai-pagination mt-4">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link glass-card" href="?page=1">
+                    <i class="fas fa-angle-double-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link glass-card" href="?page={{ page_obj.previous_page_number }}">
+                    <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <li class="page-item active">
+                    <span class="page-link glass-card glow-text">{{ num }}</span>
+                </li>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item">
+                    <a class="page-link glass-card" href="?page={{ num }}">{{ num }}</a>
+                </li>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link glass-card" href="?page={{ page_obj.next_page_number }}">
+                    <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link glass-card" href="?page={{ page_obj.paginator.num_pages }}">
+                    <i class="fas fa-angle-double-left"></i>
+                </a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<style>
+    .ai-pagination .page-link {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: #fff;
+        margin: 0 2px;
+        padding: 0.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .ai-pagination .page-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: var(--ai-primary);
+    }
+
+    .ai-pagination .page-item.active .page-link {
+        background: var(--ai-primary);
+        border-color: var(--ai-primary);
+        box-shadow: var(--ai-glow);
+    }
+
+    .ai-pagination .page-link:focus {
+        box-shadow: none;
+        outline: none;
+    }
+</style>

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block title %}درخواست تسویه جدید{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- نوار مسیر -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'settlements:settlement-list' %}">تسویه حساب‌ها</a></li>
+            <li class="breadcrumb-item active">درخواست جدید</li>
+        </ol>
+    </nav>
+
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <h3 class="mb-4">درخواست تسویه جدید</h3>
+
+                <!-- اطلاعات موجودی -->
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="alert-heading mb-1">موجودی قابل تسویه:</h6>
+                            <p class="mb-0" id="userBalance">{{ user.balance|intcomma|default:0 }} تومان</p>
+                        </div>
+                        <a href="{% url 'transactions:transaction-list' %}" class="btn btn-outline-info btn-sm">
+                            مشاهده تراکنش‌ها
+                        </a>
+                    </div>
+                </div>
+
+                <!-- فرم درخواست -->
+                <form method="post" id="settlementForm">
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            {{ form.amount|as_crispy_field }}
+                            <div class="form-text text-muted">
+                                حداقل مبلغ تسویه: ۵۰,۰۰۰ تومان
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            {{ form.bank_account|as_crispy_field }}
+                            <div class="form-text text-muted">
+                                شماره شبا باید با IR شروع شود و ۲۴ رقم باشد
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- قوانین و مقررات -->
+                    <div class="rules-box bg-light p-3 rounded mb-4 mt-3">
+                        <h6>قوانین و مقررات تسویه:</h6>
+                        <ul class="mb-0 small">
+                            <li>حداقل مبلغ تسویه ۵۰,۰۰۰ تومان است</li>
+                            <li>تسویه فقط به حساب‌های بانکی به نام کاربر انجام می‌شود</li>
+                            <li>مدت زمان واریز حداکثر ۲۴ ساعت کاری است</li>
+                            <li>در صورت اشتباه بودن اطلاعات حساب، مسئولیتی متوجه سایت نیست</li>
+                        </ul>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'settlements:settlement-list' %}" class="btn btn-outline-secondary">
+                            انصراف
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            ثبت درخواست
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.getElementById('settlementForm').addEventListener('submit', function(e) {
+    const amount = parseInt(document.getElementById('id_amount').value);
+    const balance = parseInt('{{ user.balance|default:0 }}'.replace(/,/g, ''));
+    const minAmount = 50000;
+    
+    if (amount > balance) {
+        e.preventDefault();
+        alert('مبلغ درخواستی بیشتر از موجودی شما است');
+        return;
+    }
+    
+    if (amount < minAmount) {
+        e.preventDefault();
+        alert(`حداقل مبلغ تسویه ${minAmount.toLocaleString()} تومان است`);
+        return;
+    }
+});
+
+// اعتبارسنجی شماره شبا
+document.getElementById('id_bank_account').addEventListener('input', function(e) {
+    let value = e.target.value;
+    if (value && !value.startsWith('IR')) {
+        value = 'IR' + value;
+    }
+    e.target.value = value.toUpperCase();
+});
+</script>
+{% endblock %}

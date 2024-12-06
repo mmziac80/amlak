@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block title %}دسترسی غیرمجاز{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1 class="text-danger">403</h1>
+    <h2>دسترسی غیرمجاز</h2>
+    <p>شما مجوز دسترسی به این صفحه را ندارید.</p>
+    <a href="{% url 'home' %}" class="btn btn-primary">بازگشت به صفحه اصلی</a>
+</div>
+{% endblock %}

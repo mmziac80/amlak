@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}درباره ما - املاک مشهد{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <h1 class="mb-4">درباره املاک مشهد</h1>
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">معرفی مجموعه</h5>
+                    <p>املاک مشهد با بیش از ۱۰ سال سابقه درخشان در زمینه خرید، فروش و اجاره املاک در مشهد مقدس، همواره در تلاش است تا بهترین خدمات را به مشتریان عزیز ارائه دهد.</p>
+                    
+                    <h5 class="mt-4">خدمات ما</h5>
+                    <ul>
+                        <li>خرید و فروش آپارتمان، ویلا و زمین</li>
+                        <li>اجاره واحدهای مسکونی و تجاری</li>
+                        <li>اجاره روزانه سوئیت و آپارتمان مبله</li>
+                        <li>مشاوره تخصصی سرمایه‌گذاری در املاک</li>
+                        <li>کارشناسی و ارزیابی ملک</li>
+                    </ul>
+
+                    <h5 class="mt-4">چرا املاک مشهد؟</h5>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span>مشاوره تخصصی و رایگان</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle text-success"></i>
+                                <span>قیمت‌گذاری منصفانه</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .feature-item {
+        padding: 10px;
+        margin-bottom: 10px;
+    }
+    .feature-item i {
+        margin-left: 10px;
+    }
+</style>
+{% endblock %}

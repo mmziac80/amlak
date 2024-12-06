@@ -1,0 +1,39 @@
+{
+  "name": "noUiSlider",
+  "filename": "nouislider.min.js",
+  "description": "noUiSlider is a lightweight, ARIA-accessible JavaScript range slider with multi-touch and keyboard support.",
+  "homepage": "https://refreshless.com/nouislider/",
+  "keywords": [
+    "slider",
+    "nouislider",
+    "form",
+    "range",
+    "handles",
+    "touch",
+    "input",
+    "slide",
+    "aria"
+  ],
+  "autoupdate": {
+    "source": "npm",
+    "target": "nouislider",
+    "fileMap": [
+      {
+        "basePath": "dist",
+        "files": [
+          "**/*"
+        ]
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/leongersen/noUiSlider"
+  },
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Leon Gersen"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}املاک هوشمند مشهد{% endblock %}</title>
+    
+    <!-- فونت‌ها و استایل‌های پایه -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/vazir-font.css' %}">
+    
+    <style>
+        :root {
+            --ai-primary: #00f2fe;
+            --ai-secondary: #4facfe;
+            --ai-dark: #0a192f;
+            --ai-darker: #060c17;
+            --ai-glow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        body {
+            font-family: 'Vazir', sans-serif;
+            background: linear-gradient(135deg, var(--ai-darker), var(--ai-dark));
+            color: #fff;
+            min-height: 100vh;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: var(--ai-primary);
+            box-shadow: var(--ai-glow);
+            color: #fff;
+        }
+
+        .btn-glow {
+            background: linear-gradient(45deg, var(--ai-primary), var(--ai-secondary));
+            border: none;
+            color: var(--ai-dark);
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-glow:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--ai-glow);
+        }
+
+        .btn-outline-glow {
+            background: transparent;
+            border: 1px solid var(--ai-primary);
+            color: var(--ai-primary);
+            transition: all 0.3s ease;
+        }
+
+        .btn-outline-glow:hover {
+            background: var(--ai-primary);
+            color: var(--ai-dark);
+            box-shadow: var(--ai-glow);
+        }
+
+        .glow-text {
+            color: var(--ai-primary);
+            text-shadow: var(--ai-glow);
+        }
+
+        .glow-icon {
+            color: var(--ai-primary);
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .footer {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    {% include 'includes/navbar.html' %}
+    
+    <main>
+        {% if messages %}
+            <div class="container mt-4">
+                {% for message in messages %}
+                    <div class="alert glass-card alert-{{ message.tags }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'includes/footer.html' %}
+
+    <!-- اسکریپت‌های پایه -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

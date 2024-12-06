@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+{% load crispy_forms_tags %}
+
+{% block title %}شروع فرآیند پرداخت - {{ property.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'home' %}">خانه</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'properties:detail' property.id %}">{{ property.title }}</a></li>
+            <li class="breadcrumb-item active">رزرو اقامتگاه</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <!-- اطلاعات ملک -->
+        <div class="col-md-4 mb-4">
+            <div class="glass-card p-4">
+                <div class="property-image mb-3">
+                    {% if property.has_images %}
+                        <img src="{{ property.get_main_image_url }}" 
+                             class="img-fluid rounded" 
+                             alt="{{ property.title }}">
+                        {% if property.get_image_count > 1 %}
+                            <small class="text-muted d-block mt-1">
+                                <i class="fas fa-images"></i>
+                                {{ property.get_image_count }} تصویر
+                            </small>
+                        {% endif %}
+                    {% else %}
+                        <img src="{% static 'images/default-property.jpg' %}" 
+                             class="img-fluid rounded" 
+                             alt="تصویر موجود نیست">
+                    {% endif %}
+                </div>
+                <h4>{{ property.title }}</h4>
+                <div class="property-details mt-3">
+                    <p><i class="fas fa-map-marker-alt"></i> {{ property.get_district_display }}</p>
+                    <p><i class="fas fa-bed"></i> {{ property.rooms }} خواب</p>
+                    <p><i class="fas fa-ruler"></i> {{ property.area }} متر مربع</p>
+                    <p class="text-primary"><i class="fas fa-money-bill"></i> قیمت هر شب: {{ property.daily_price|intcomma }} تومان</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- فرم رزرو -->
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <h2 class="mb-4">انتخاب تاریخ اقامت</h2>
+                
+                <form method="post" id="reservationForm">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ form.check_in_date|as_crispy_field }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            {{ form.check_out_date|as_crispy_field }}
+                        </div>
+                    </div>
+
+                    <div class="price-calculation mt-4 mb-4 p-3 rounded">
+                        <h5>محاسبه هزینه</h5>
+                        <div id="priceDetails" style="display: none;">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>تعداد شب:</span>
+                                <span id="nightsCount">-</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>قیمت هر شب:</span>
+                                <span>{{ property.daily_price|intcomma }} تومان</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>مبلغ کل:</span>
+                                <span id="totalPrice" class="text-primary fw-bold">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="fas fa-check-circle me-2"></i>
+                            ادامه فرآیند رزرو
+                        </button>
+                        <a href="{% url 'properties:detail' property.id %}" class="btn btn-outline-secondary px-4 ms-2">
+                            انصراف
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .property-details p {
+        margin-bottom: 0.5rem;
+    }
+    .property-details i {
+        width: 25px;
+        color: var(--primary);
+    }
+    .price-calculation {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+    }
+    .property-image img {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const checkInInput = document.getElementById('id_check_in_date');
+        const checkOutInput = document.getElementById('id_check_out_date');
+        const priceDetails = document.getElementById('priceDetails');
+        const nightsCountElement = document.getElementById('nightsCount');
+        const totalPriceElement = document.getElementById('totalPrice');
+        const dailyPrice = {{ property.daily_price }};
+
+        function updatePriceCalculation() {
+            const checkIn = new Date(checkInInput.value);
+            const checkOut = new Date(checkOutInput.value);
+
+            if (checkIn && checkOut && checkOut > checkIn) {
+                const nights = Math.floor((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+                const totalPrice = nights * dailyPrice;
+
+                nightsCountElement.textContent = nights + ' شب';
+                totalPriceElement.textContent = new Intl.NumberFormat('fa-IR').format(totalPrice) + ' تومان';
+                priceDetails.style.display = 'block';
+            } else {
+                priceDetails.style.display = 'none';
+            }
+        }
+
+        checkInInput.addEventListener('change', updatePriceCalculation);
+        checkOutInput.addEventListener('change', updatePriceCalculation);
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+
+{% block title %}
+    {% if form.instance.pk %}
+        ویرایش ملک - {{ form.instance.title }}
+    {% else %}
+        ثبت ملک جدید
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="glass-card p-4">
+                <h2 class="text-center mb-4">
+                    {% if form.instance.pk %}
+                        ویرایش ملک
+                    {% else %}
+                        ثبت ملک جدید
+                    {% endif %}
+                </h2>
+
+                <form method="post" enctype="multipart/form-data" id="propertyForm" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    
+                    <div class="row g-3">
+                        <!-- اطلاعات اصلی -->
+                        <div class="col-md-6">
+                            {{ form.title|crispy }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.property_type|crispy }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.district|crispy }}
+                        </div>
+                        <div class="col-md-6">
+                            {{ form.price|crispy }}
+                        </div>
+
+                        <!-- مشخصات ملک -->
+                        <div class="col-md-4">
+                            {{ form.area|crispy }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.rooms|crispy }}
+                        </div>
+                        <div class="col-md-4">
+                            {{ form.floor|crispy }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.total_floors|crispy }}
+                        </div>
+
+                        <!-- امکانات -->
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5 class="mb-0">امکانات ملک</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            {{ form.parking|crispy }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            {{ form.elevator|crispy }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            {{ form.storage|crispy }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            {{ form.balcony|crispy }}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- آدرس و توضیحات -->
+                        <div class="col-12">
+                            {{ form.address|crispy }}
+                        </div>
+                        <div class="col-12">
+                            {{ form.description|crispy }}
+                        </div>
+
+                        <!-- آپلود تصاویر -->
+                        <div class="col-12">
+                            <div class="card bg-light">
+                                <div class="card-header">
+                                    <h5 class="mb-0">تصاویر ملک</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="imageUploader" class="dropzone"></div>
+                                    <small class="text-muted mt-2">
+                                        حداکثر حجم هر تصویر: 5 مگابایت | فرمت‌های مجاز: JPG, PNG
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- دکمه‌های عملیات -->
+                        <div class="col-12 text-center mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg px-5">
+                                <i class="fas fa-save me-2"></i>
+                                {% if form.instance.pk %}
+                                    ذخیره تغییرات
+                                {% else %}
+                                    ثبت ملک
+                                {% endif %}
+                            </button>
+                            <a href="{% url 'property_list' %}" class="btn btn-outline-secondary btn-lg px-5 ms-2">
+                                <i class="fas fa-times me-2"></i>
+                                انصراف
+                            </a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css">
+<style>
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    
+    .dropzone {
+        border: 2px dashed rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        min-height: 150px;
+        padding: 20px;
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .dropzone .dz-message {
+        margin: 2em 0;
+    }
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+<script>
+    Dropzone.options.imageUploader = {
+        url: "{% url 'property_image_upload' %}",
+        paramName: "image",
+        maxFilesize: 5,
+        acceptedFiles: "image/*",
+        addRemoveLinks: true,
+        dictDefaultMessage: "تصاویر را اینجا رها کنید یا کلیک کنید",
+        dictRemoveFile: "حذف",
+        dictCancelUpload: "لغو",
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        init: function() {
+            this.on("success", function(file, response) {
+                console.log("تصویر با موفقیت آپلود شد:", response);
+            });
+            this.on("error", function(file, message) {
+                console.error("خطا در آپلود تصویر:", message);
+            });
+        }
+    };
+
+    // Form validation
+    document.getElementById('propertyForm').addEventListener('submit', function(event) {
+        if (!this.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        this.classList.add('was-validated');
+    });
+</script>
+{% endblock %}

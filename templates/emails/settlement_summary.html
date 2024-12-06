@@ -1,0 +1,96 @@
+{% extends "emails/base.html" %}
+
+{% block title %}خلاصه وضعیت تسویه‌های ماهانه{% endblock %}
+
+{% block content %}
+<div class="email-container" style="direction: rtl; font-family: Vazir, Tahoma; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <img src="{{ site_logo }}" alt="لوگو" style="max-width: 150px;">
+        <h2 style="color: #2c3e50; margin-top: 20px;">خلاصه تسویه‌های ماه {{ month_name }}</h2>
+        <p style="color: #7f8c8d;">{{ report_date|date:"Y/m/d" }}</p>
+    </div>
+
+    <div class="summary-details" style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div class="stats-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px;">
+            <div class="stat-box" style="background: #e8f6f3; padding: 15px; border-radius: 8px; text-align: center;">
+                <h4 style="color: #27ae60; margin: 0;">تسویه‌های موفق</h4>
+                <p style="font-size: 24px; color: #27ae60; margin: 10px 0;">{{ successful_count }}</p>
+                <span style="color: #27ae60; font-size: 14px;">{{ successful_percentage }}%</span>
+            </div>
+            <div class="stat-box" style="background: #fdeaea; padding: 15px; border-radius: 8px; text-align: center;">
+                <h4 style="color: #e74c3c; margin: 0;">تسویه‌های ناموفق</h4>
+                <p style="font-size: 24px; color: #e74c3c; margin: 10px 0;">{{ failed_count }}</p>
+                <span style="color: #e74c3c; font-size: 14px;">{{ failed_percentage }}%</span>
+            </div>
+            <div class="stat-box" style="background: #fff8e1; padding: 15px; border-radius: 8px; text-align: center;">
+                <h4 style="color: #f39c12; margin: 0;">در انتظار تسویه</h4>
+                <p style="font-size: 24px; color: #f39c12; margin: 10px 0;">{{ pending_count }}</p>
+                <span style="color: #f39c12; font-size: 14px;">{{ pending_percentage }}%</span>
+            </div>
+        </div>
+
+        <div class="financial-summary" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0; margin-bottom: 15px;">خلاصه مالی</h4>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span class="label" style="color: #7f8c8d;">کل مبلغ تسویه شده:</span>
+                <span class="value" style="color: #27ae60; font-weight: bold;">{{ total_amount|intcomma }} تومان</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span class="label" style="color: #7f8c8d;">میانگین مبلغ هر تسویه:</span>
+                <span class="value" style="color: #2c3e50;">{{ average_amount|intcomma }} تومان</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                <span class="label" style="color: #7f8c8d;">بیشترین مبلغ تسویه:</span>
+                <span class="value" style="color: #2c3e50;">{{ max_amount|intcomma }} تومان</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between;">
+                <span class="label" style="color: #7f8c8d;">کمترین مبلغ تسویه:</span>
+                <span class="value" style="color: #2c3e50;">{{ min_amount|intcomma }} تومان</span>
+            </div>
+        </div>
+
+        <div class="chart-section" style="background: white; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0; margin-bottom: 15px;">نمودار روند تسویه‌ها</h4>
+            <img src="{{ chart_url }}" alt="نمودار تسویه‌ها" style="width: 100%; height: auto; border-radius: 4px;">
+            <p style="color: #7f8c8d; font-size: 12px; text-align: center; margin-top: 10px;">
+                نمودار مقایسه‌ای تسویه‌های موفق و ناموفق در طول ماه
+            </p>
+        </div>
+
+        {% if recent_settlements %}
+        <div class="recent-settlements" style="background: white; border-radius: 8px; padding: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0; margin-bottom: 15px;">آخرین تسویه‌های انجام شده</h4>
+            <div class="settlements-list">
+                {% for settlement in recent_settlements %}
+                <div class="settlement-item" style="padding: 10px; border-bottom: 1px solid #eee; {% if forloop.last %}border-bottom: none;{% endif %}">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span style="color: #7f8c8d;">{{ settlement.date|date:"Y/m/d H:i" }}</span>
+                        <span style="color: {% if settlement.status == 'completed' %}#27ae60{% elif settlement.status == 'failed' %}#e74c3c{% else %}#f39c12{% endif %};">
+                            {{ settlement.get_status_display }}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #2c3e50;">{{ settlement.tracking_code }}</span>
+                        <span style="color: #2c3e50; font-weight: bold;">{{ settlement.amount|intcomma }} تومان</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="actions" style="text-align: center; margin-top: 30px;">
+        <a href="{{ dashboard_url }}" class="btn" style="background-color: #3498db; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px; display: inline-block;">
+            مشاهده گزارش کامل در پنل مدیریت
+        </a>
+    </div>
+
+    <div class="footer-note" style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d; font-size: 14px;">
+            این گزارش به صورت خودکار در پایان هر ماه ارسال می‌شود.
+            برای تغییر تنظیمات دریافت گزارش به پنل کاربری مراجعه کنید.
+        </p>
+    </div>
+</div>
+{% endblock %}

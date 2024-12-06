@@ -1,0 +1,168 @@
+<div class="modal fade" id="filtersModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content glass-card">
+            <div class="modal-header border-0">
+                <h5 class="modal-title glow-text">فیلترهای پیشرفته</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="advancedFiltersForm" method="get">
+                    <div class="row g-4">
+                        <!-- نوع ملک -->
+                        <div class="col-md-6">
+                            <label class="form-label glow-text">نوع ملک</label>
+                            {{ form.property_type }}
+                        </div>
+
+                        <!-- منطقه -->
+                        <div class="col-md-6">
+                            <label class="form-label glow-text">منطقه</label>
+                            {{ form.district }}
+                        </div>
+
+                        <!-- محدوده قیمت -->
+                        <div class="col-12">
+                            <label class="form-label glow-text">محدوده قیمت</label>
+                            <div id="modalPriceRange"></div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="price-value" id="minPriceLabel"></span>
+                                <span class="price-value" id="maxPriceLabel"></span>
+                            </div>
+                        </div>
+
+                        <!-- متراژ -->
+                        <div class="col-12">
+                            <label class="form-label glow-text">متراژ</label>
+                            <div id="modalAreaRange"></div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span class="area-value" id="minAreaLabel"></span>
+                                <span class="area-value" id="maxAreaLabel"></span>
+                            </div>
+                        </div>
+
+                        <!-- تعداد اتاق -->
+                        <div class="col-md-6">
+                            <label class="form-label glow-text">تعداد اتاق</label>
+                            {{ form.rooms }}
+                        </div>
+
+                        <!-- امکانات -->
+                        <div class="col-12">
+                            <label class="form-label glow-text">امکانات</label>
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.parking }}
+                                        <label class="form-check-label">پارکینگ</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.elevator }}
+                                        <label class="form-check-label">آسانسور</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="form-check">
+                                        {{ form.storage }}
+                                        <label class="form-check-label">انباری</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-0">
+                <button type="button" class="btn btn-outline-glow" onclick="resetModalFilters()">
+                    پاک کردن فیلترها
+                </button>
+                <button type="button" class="btn btn-glow" onclick="applyModalFilters()">
+                    اعمال فیلترها
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modal-content {
+        background: rgba(20, 20, 30, 0.95);
+    }
+
+    .form-check-label {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .price-value, .area-value {
+        color: var(--ai-primary);
+        font-size: 0.9rem;
+    }
+
+    .noUi-connect {
+        background: var(--ai-primary);
+    }
+
+    .noUi-handle {
+        background: var(--ai-secondary);
+        border: 2px solid var(--ai-primary);
+        box-shadow: var(--ai-glow);
+    }
+</style>
+
+<script>
+    function initModalRanges() {
+        // تنظیمات اسلایدر قیمت
+        const modalPriceRange = document.getElementById('modalPriceRange');
+        noUiSlider.create(modalPriceRange, {
+            start: [0, 1000000000],
+            connect: true,
+            direction: 'rtl',
+            range: {
+                'min': 0,
+                'max': 1000000000
+            },
+            format: wNumb({
+                decimals: 0,
+                thousand: ','
+            })
+        });
+
+        // تنظیمات اسلایدر متراژ
+        const modalAreaRange = document.getElementById('modalAreaRange');
+        noUiSlider.create(modalAreaRange, {
+            start: [0, 500],
+            connect: true,
+            direction: 'rtl',
+            range: {
+                'min': 0,
+                'max': 500
+            }
+        });
+
+        // آپدیت لیبل‌ها
+        modalPriceRange.noUiSlider.on('update', function(values) {
+            document.getElementById('minPriceLabel').textContent = values[0] + ' تومان';
+            document.getElementById('maxPriceLabel').textContent = values[1] + ' تومان';
+        });
+
+        modalAreaRange.noUiSlider.on('update', function(values) {
+            document.getElementById('minAreaLabel').textContent = values[0] + ' متر';
+            document.getElementById('maxAreaLabel').textContent = values[1] + ' متر';
+        });
+    }
+
+    function resetModalFilters() {
+        document.getElementById('advancedFiltersForm').reset();
+        // ریست کردن اسلایدرها
+    }
+
+    function applyModalFilters() {
+        document.getElementById('advancedFiltersForm').submit();
+    }
+
+    // راه‌اندازی اسلایدرها هنگام باز شدن مودال
+    document.getElementById('filtersModal').addEventListener('shown.bs.modal', function() {
+        initModalRanges();
+    });
+</script>
