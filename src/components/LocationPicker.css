@@ -1,0 +1,14 @@
+.custom-marker {
+    position: relative;
+    top: -20px;
+}
+
+.mapboxgl-popup {
+    max-width: 200px;
+}
+
+.mapboxgl-popup-content {
+    direction: rtl;
+    text-align: center;
+    padding: 10px;
+}
