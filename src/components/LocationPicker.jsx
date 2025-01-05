@@ -7,9 +7,16 @@ import nmp_mapboxgl from '@neshan-maps-platform/mapbox-gl';
 const LocationPicker = ({ onLocationSelect, initialLocation = null, dealType = 'sale' }) => {
     const [map, setMap] = useState(null);
     const [marker, setMarker] = useState(null);
-    // اضافه کردن useEffect برای مدیریت initialLocation
+    const [currentLocation, setCurrentLocation] = useState(initialLocation);
+
+    // مدیریت مارکر اولیه
     useEffect(() => {
         if (map && initialLocation) {
+            // حذف مارکر قبلی اگر وجود داره
+            if (marker) {
+                marker.remove();
+            }
+
             const popup = new nmp_mapboxgl.Popup({ offset: 25 })
                 .setText('موقعیت فعلی');
 
@@ -21,44 +28,52 @@ const LocationPicker = ({ onLocationSelect, initialLocation = null, dealType = '
                 .setPopup(popup)
                 .addTo(map);
 
+            // اضافه کردن event listener برای drag
+            newMarker.on('dragend', () => {
+                const lngLat = newMarker.getLngLat();
+                setCurrentLocation(lngLat);
+                onLocationSelect(lngLat);
+            });
+
             setMarker(newMarker);
+            setCurrentLocation(initialLocation);
         }
     }, [map, initialLocation, dealType]);
-    // اینجا handleMapClick را اضافه می‌کنیم
+
     const handleMapClick = (e) => {
-        console.log('Map clicked at:', e.lngLat);
-        if (!map) {
-            console.log('Map not initialized');
-            return;
-        }
-    
+        if (!map) return;
+
+        // حذف مارکر قبلی
         if (marker) {
-            console.log('Removing existing marker');
             marker.remove();
         }
-    
+
+        const newLocation = {
+            lng: e.lngLat.lng,
+            lat: e.lngLat.lat
+        };
+
         const popup = new nmp_mapboxgl.Popup({ offset: 25 })
             .setText('موقعیت انتخاب شده');
-        console.log('Popup created');
-    
+
         const newMarker = new nmp_mapboxgl.Marker({
             color: dealType === 'sale' ? '#FF4444' : dealType === 'rent' ? '#00F955' : '#9B59B6',
             draggable: true
         })
-            .setLngLat([e.lngLat.lng, e.lngLat.lat])
+            .setLngLat([newLocation.lng, newLocation.lat])
             .setPopup(popup)
             .addTo(map);
-        
-        console.log('Marker created and added:', newMarker);
-    
-        setMarker(newMarker);
-        console.log('Marker state updated');
-    
-        onLocationSelect({
-            lng: e.lngLat.lng,
-            lat: e.lngLat.lat
+
+        // اضافه کردن event listener برای drag
+        newMarker.on('dragend', () => {
+            const lngLat = newMarker.getLngLat();
+            setCurrentLocation(lngLat);
+            onLocationSelect(lngLat);
         });
-        console.log('Location selected');
+
+        setMarker(newMarker);
+        setCurrentLocation(newLocation);
+        onLocationSelect(newLocation);
     };
     
     

@@ -212,10 +212,10 @@ function AddProperty() {
           ))}
         </div>
       </div>
-      // در بخش BasicInfoForm، قسمت نقشه رو اینطوری آپدیت می‌کنیم:
+
       <div>
         <h3 className="text-lg font-medium text-gray-900 mb-3">موقعیت مکانی</h3>
-        <LocationPicker 
+        <LocationPicker
             onLocationSelect={(location) => {
                 setBasicInfo(prev => ({
                     ...prev,
@@ -224,18 +224,34 @@ function AddProperty() {
                         lng: location.lng
                     }
                 }));
-                console.log("موقعیت دریافتی از نقشه:", location);
+                // اضافه کردن اعتبارسنجی موقعیت
+                if (location.lat && location.lng) {
+                    setErrors(prev => ({
+                        ...prev,
+                        location: null
+                    }));
+                }
             }}
-            initialLocation={basicInfo.location.lat ? basicInfo.location : null}
+            initialLocation={
+                basicInfo.location && basicInfo.location.lat && basicInfo.location.lng
+                    ? basicInfo.location
+                    : null
+            }
             dealType={dealType}
         />
-
-        {basicInfo.location.lat && (
-            <p className="text-sm text-gray-600 mt-2">
-                موقعیت انتخاب شده: طول جغرافیایی {basicInfo.location.lng.toFixed(6)}، عرض جغرافیایی {basicInfo.location.lat.toFixed(6)}
-            </p>
+        {/* نمایش خطا اگر موقعیت انتخاب نشده باشد */}
+        {errors?.location && (
+            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
         )}
-    </div>
+
+
+
+          {basicInfo.location.lat && (
+              <p className="text-sm text-gray-600 mt-2">
+                  موقعیت انتخاب شده: طول جغرافیایی {basicInfo.location.lng.toFixed(6)}، عرض جغرافیایی {basicInfo.location.lat.toFixed(6)}
+              </p>
+          )}
+      </div>
 
       {/* دکمه‌های پیمایش */}
       <div className="flex justify-between">
