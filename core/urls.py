@@ -1,30 +1,30 @@
-from django.urls import path
-from django.contrib.auth import views as auth_views
-from . import views
+# -*- coding: utf-8 -*-
 
-app_name = 'users'
+from django.urls import path
+from . import views
+from .views import property_locations_api
+
+
+app_name = 'core'
 
 urlpatterns = [
-    # ثبت نام و پروفایل
+    # صفحه اصلی
+    path('', views.HomeView.as_view(), name='home'),
+    
+    # ثبت نام و داشبورد
     path('signup/', views.SignUpView.as_view(), name='signup'),
-    path('profile/', views.ProfileView.as_view(), name='profile'),
-    path('profile/update/', views.ProfileUpdateView.as_view(), name='profile_update'),
+    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
     
-    # مدیریت رمز عبور
-    path('password-change/', auth_views.PasswordChangeView.as_view(
-        template_name='users/password_change.html',
-        success_url='/users/password-change/done/'
-    ), name='password_change'),
+    # صفحات استاتیک
+    path('about/', views.AboutView.as_view(), name='about'),
+    path('contact/', views.ContactView.as_view(), name='contact'),
+    path('privacy/', views.PrivacyView.as_view(), name='privacy'),
+    path('terms/', views.TermsView.as_view(), name='terms'),
+    path('faq/', views.FAQView.as_view(), name='faq'),
     
-    path('password-change/done/', auth_views.PasswordChangeDoneView.as_view(
-        template_name='users/password_change_done.html'
-    ), name='password_change_done'),
+    # جستجو و آمار
+    path('search/', views.SearchView.as_view(), name='search'),
+    path('stats/', views.StatsView.as_view(), name='stats'),
+    path('api/properties/', property_locations_api, name='property_locations_api'),
 
-    # علاقه‌مندی‌ها و املاک من
-    path('my-properties/', views.UserPropertiesView.as_view(), name='my_properties'),
-    path('favorites/', views.UserFavoritesView.as_view(), name='favorites'),
-    
-    # تنظیمات حساب کاربری
-    path('settings/', views.UserSettingsView.as_view(), name='settings'),
-    path('notifications/', views.UserNotificationsView.as_view(), name='notifications'),
 ]

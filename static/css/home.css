@@ -1,0 +1,87 @@
+/* استایل‌های هدر اصلی */
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-dark), var(--primary-light));
+    padding: 4rem 0;
+    margin-bottom: 3rem;
+    border-radius: 0 0 25px 25px;
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-content {
+    text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.hero-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.2rem;
+    margin: 1.5rem 0;
+}
+
+.search-box {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    padding: 2rem;
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* استایل‌های نقشه */
+.map-section {
+    padding: 1.5rem;
+    margin-top: 3rem;
+}
+
+.map-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.property-map {
+    height: 400px;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.map-info-window {
+    padding: 10px;
+    max-width: 250px;
+}
+
+.map-info-window img {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+/* استایل‌های بخش املاک */
+.section-title {
+    position: relative;
+    padding-bottom: 1rem;
+    margin-bottom: 2rem;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-glow);
+}
+
+.property-section {
+    margin-bottom: 3rem;
+}
+
+.sub-title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}

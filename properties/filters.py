@@ -1,6 +1,14 @@
+# -*- coding: utf-8 -*-
+from django_filters import FilterSet
+from django.db import models
+from django_filters.widgets import RangeWidget
+from django.contrib.gis.db import models as gis_models
+from django.contrib.gis.geos import Point
+from django.contrib.gis.measure import D
+
 import django_filters
 from django.db.models import Q
-from .models import SaleProperty, RentProperty, DailyRentProperty
+from .models import  Property,SaleProperty, RentProperty, DailyRentProperty
 from .constants import (
     PROPERTY_TYPE_CHOICES,
     DISTRICT_CHOICES,
@@ -8,6 +16,14 @@ from .constants import (
     DIRECTION_CHOICES,
     PROPERTY_STATUS_CHOICES
 )
+FILTER_OVERRIDES = {
+    models.JSONField: {
+        'filter_class': django_filters.CharFilter,
+        'extra': lambda f: {
+            'lookup_expr': 'icontains',
+        },
+    }
+}
 
 class BasePropertyFilter(django_filters.FilterSet):
     """فیلترهای پایه برای همه انواع املاک"""
@@ -48,6 +64,39 @@ class BasePropertyFilter(django_filters.FilterSet):
     # فیلترهای تاریخ
     created_after = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='gte')
     created_before = django_filters.DateTimeFilter(field_name='created_at', lookup_expr='lte')
+    location = django_filters.CharFilter(method='filter_location')
+
+
+    class Meta:
+        model = Property
+        fields = '__all__'
+        filter_overrides = {
+            models.JSONField: {
+                'filter_class': django_filters.CharFilter,
+                'extra': lambda f: {
+                    'lookup_expr': 'exact',
+                }
+            },
+            gis_models.PointField: {
+                'filter_class': django_filters.CharFilter,
+                'extra': lambda f: {
+                    'method': 'filter_location',
+                }
+            },
+        }
+    def filter_location(self, queryset, name, value):
+        """فیلتر املاک بر اساس موقعیت و شعاع
+        فرمت ورودی: 'عرض جغرافیایی,طول جغرافیایی,شعاع به کیلومتر'
+        """
+        try:
+            lat, lng, radius = map(float, value.split(','))
+            point = Point(lng, lat, srid=4326)
+            return queryset.filter(location__distance_lte=(point, D(km=radius)))
+        except (ValueError, TypeError, IndexError):
+            return queryset
+
+
+
 
     def search_filter(self, queryset, name, value):
         """جستجو در عنوان، توضیحات و آدرس"""
@@ -56,44 +105,36 @@ class BasePropertyFilter(django_filters.FilterSet):
             Q(description__icontains=value) |
             Q(address__icontains=value)
         )
+    
 
 class SalePropertyFilter(BasePropertyFilter):
-    """فیلترهای مخصوص املاک فروشی"""
     min_price = django_filters.NumberFilter(field_name='price', lookup_expr='gte')
     max_price = django_filters.NumberFilter(field_name='price', lookup_expr='lte')
-    is_exchangeable = django_filters.BooleanFilter()
-    is_negotiable = django_filters.BooleanFilter()
 
     class Meta:
         model = SaleProperty
-        fields = '__all__'
+        exclude = ['location']
+
 
 class RentPropertyFilter(BasePropertyFilter):
-    """فیلترهای مخصوص املاک اجاره‌ای"""
     min_deposit = django_filters.NumberFilter(field_name='deposit', lookup_expr='gte')
-    max_deposit = django_filters.NumberFilter(field_name='deposit', lookup_expr='lte')
     min_rent = django_filters.NumberFilter(field_name='monthly_rent', lookup_expr='gte')
-    max_rent = django_filters.NumberFilter(field_name='monthly_rent', lookup_expr='lte')
-    is_convertible = django_filters.BooleanFilter()
-    has_transfer_fee = django_filters.BooleanFilter()
+    # فیلترهای مخصوص اجاره
 
+   
     class Meta:
         model = RentProperty
-        fields = '__all__'
+        exclude = ['location']
 
 class DailyRentPropertyFilter(BasePropertyFilter):
-    """فیلترهای مخصوص املاک اجاره روزانه"""
     min_price = django_filters.NumberFilter(field_name='daily_price', lookup_expr='gte')
-    max_price = django_filters.NumberFilter(field_name='daily_price', lookup_expr='lte')
-    min_days = django_filters.NumberFilter(field_name='minimum_days', lookup_expr='gte')
-    max_days = django_filters.NumberFilter(field_name='maximum_days', lookup_expr='lte')
-    min_capacity = django_filters.NumberFilter(field_name='capacity', lookup_expr='gte')
-    max_capacity = django_filters.NumberFilter(field_name='capacity', lookup_expr='lte')
+    available_date = django_filters.DateFilter(method='filter_availability')
+    # فیلترهای مخصوص اجاره روزانه
 
     class Meta:
         model = DailyRentProperty
-        fields = '__all__'
-
+        exclude = ['location']
+        
 class PropertySearchFilter(django_filters.FilterSet):
     """فیلتر پیشرفته برای جستجوی همه انواع املاک"""
     price_range = django_filters.RangeFilter(field_name='price')
@@ -114,3 +155,4 @@ class PropertySearchFilter(django_filters.FilterSet):
             'property_types', 'districts',
             'rooms', 'parking', 'elevator'
         ]
+

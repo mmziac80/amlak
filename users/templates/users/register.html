@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="glass-card p-4">
+                <h2 class="text-center mb-4">ثبت‌نام در سایت</h2>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="post" class="needs-validation" novalidate>
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label class="form-label">شماره موبایل</label>
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                            <input 
+                                type="tel" 
+                                name="phone" 
+                                class="form-control" 
+                                pattern="09[0-9]{9}"
+                                placeholder="مثال: 09123456789"
+                                required
+                                dir="ltr">
+                        </div>
+                        <div class="invalid-feedback">
+                            لطفا یک شماره موبایل معتبر وارد کنید
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mb-3">
+                        <i class="fas fa-paper-plane me-2"></i>
+                        دریافت کد تایید
+                    </button>
+
+                    <div class="text-center">
+                        <p>قبلاً ثبت‌نام کرده‌اید؟ 
+                            <a href="{% url 'users:login' %}">ورود به حساب</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+// Validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault()
+                event.stopPropagation()
+            }
+            form.classList.add('was-validated')
+        }, false)
+    })
+})()
+</script>
+{% endblock %}
+{% endblock %}

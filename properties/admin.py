@@ -1,128 +1,252 @@
+# -*- coding: utf-8 -*-
 from django.contrib import admin
+from django.db import models
+from django.forms import widgets
+from django.conf import settings
 from django.utils.html import format_html
+from django import forms
+from django.http import HttpRequest
+from django.contrib.auth import get_user_model
+from django.contrib import admin
+from leaflet.admin import LeafletGeoAdmin
+
+
+from typing import Any, Type
+from django.forms import ModelForm
+
+
+
+
 from .models import (
-    SaleProperty, 
-    RentProperty, 
-    DailyRentProperty, 
-    Booking, 
-    PropertyAvailability, 
-    Visit,
-    PropertyImage
+    Property,
+    PropertyImage,
+    SaleProperty,
+    RentProperty,
+    DailyRentProperty,
+    PropertyFeature,
+    Visit  
 )
+
+
+class PropertyAdminForm(forms.ModelForm):
+    class Meta:
+        model = Property
+        fields = '__all__'
+
 
 class PropertyImageInline(admin.TabularInline):
     model = PropertyImage
     extra = 1
-    readonly_fields = ('image_preview',)
 
-    def image_preview(self, obj):
-        if obj.image:
-            return format_html('<img src="{}" width="150" height="150" />', obj.image.url)
-        return 'بدون تصویر'
-    image_preview.short_description = 'پیش‌نمایش'
+class BasePropertyAdmin(LeafletGeoAdmin):
+    map_template = 'properties/admin/gis/neshan_map.html'
 
+
+    map_width = '100%'
+    map_height = '500px'
+        # تنظیمات ویجت نقشه
+    settings_overrides = {
+        'DEFAULT_CENTER': (36.2972, 59.6067),  # مختصات مشهد
+        'DEFAULT_ZOOM': 14,
+        'TILES': [],  # خالی چون نشان خودش تایل‌ها را مدیریت می‌کند
+        'SCALE': True,  # نمایش مقیاس
+        'MINIMAP': True,  # نمایش نقشه کوچک
+    }
+    form = PropertyAdminForm
+    list_filter = ['status', 'is_active', 'is_featured']
+    search_fields = ['title', 'description', 'address']
+
+    fieldsets = (
+        ('اطلاعات اصلی', {
+            'fields': ('title', 'description', 'property_type')
+        }),
+        ('موقعیت مکانی و آدرس', {
+            'fields': ('location', 'district', 'address'),
+            'classes': ('location-fieldset',),
+            'description': 'موقعیت ملک را روی نقشه انتخاب کنید'
+        }),
+
+        ('مشخصات ملک', {
+            'fields': ('area', 'rooms', 'floor', 'total_floors', 'build_year')
+        }),
+        ('امکانات', {
+            'fields': ('parking', 'elevator', 'storage', 'balcony', 'package',
+                      'security', 'pool', 'gym', 'renovation')
+        }),
+    )
+    class Media:
+        css = {
+            'all': (
+                'https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.css',
+            )
+        }
+        js = [
+            'https://static.neshan.org/sdk/leaflet/v1.9.4/neshan-sdk/v1.0.8/index.js',
+        ]
+
+
+
+
+
+
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        return form
+
+
+    def save_model(self, request, obj, form, change):
+        obj.owner = request.user
+        super().save_model(request, obj, form, change)
+
+    def add_view(self, request: HttpRequest, form_url: str = '', extra_context=None):
+        User = get_user_model()
+        data = request.POST.copy()
+        
+        # تبدیل ID کاربر به string
+        data['owner'] = str(request.user.pk)
+        
+        request.POST = data
+        return super().add_view(request, form_url, extra_context)
+
+@admin.register(Property)
+class PropertyAdmin(BasePropertyAdmin):
+    inlines = [PropertyImageInline]
+    
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if obj:
+            if hasattr(obj, 'saleproperty'):
+                return SalePropertyAdmin.form
+            elif hasattr(obj, 'rentproperty'):
+                return RentPropertyAdmin.form
+            elif hasattr(obj, 'dailyrentproperty'):
+                return DailyRentPropertyAdmin.form
+        return form
 @admin.register(SaleProperty)
-class SalePropertyAdmin(admin.ModelAdmin):
+class SalePropertyAdmin(BasePropertyAdmin):
     fieldsets = (
         ('اطلاعات اصلی', {
-            'fields': ('title', 'description', 'property_type', 'price', 'price_per_meter')
+            'fields': ('title', 'description', 'property_type')
         }),
-        ('مشخصات', {
-            'fields': ('area', 'rooms', 'floor', 'total_floors')
+        ('موقعیت مکانی و آدرس', {
+            'fields': ('location', 'district', 'address'),
+            'classes': ('location-fieldset',),
+            'description': 'موقعیت ملک را روی نقشه انتخاب کنید یا آدرس را وارد کنید'
+        }),
+        ('مشخصات ملک', {
+            'fields': ('area', 'rooms', 'floor', 'total_floors', 'build_year')
         }),
         ('امکانات', {
-            'fields': ('parking', 'storage', 'elevator', 'balcony')
+            'fields': ('parking', 'elevator', 'storage', 'balcony', 'package',
+                      'security', 'pool', 'gym', 'renovation')
         }),
-        ('موقعیت', {
-            'fields': ('district', 'address', 'latitude', 'longitude')
+        ('قیمت و شرایط فروش', {
+            'fields': ('total_price', 'price_per_meter', 'is_exchangeable',
+                      'is_negotiable', 'exchange_description')
         }),
+        ('وضعیت', {
+            'fields': ('status', 'is_featured', 'is_active')
+        })
     )
-    list_display = ('title', 'property_type', 'price_display', 'price_per_meter', 'area', 'rooms')
-    list_filter = ('property_type', 'district', 'parking', 'elevator')
-    search_fields = ('title', 'description', 'address')
+    list_display = ('title', 'total_price', 'area', 'status', 'is_active', 'created_at', 'property_type', 'district')
+    list_filter = list(BasePropertyAdmin.list_filter) + ['property_type', 'district']
+
+
     inlines = [PropertyImageInline]
-
-    def price_display(self, obj):
-        return f"{obj.price:,} تومان"
-    price_display.short_description = 'قیمت'
-
 @admin.register(RentProperty)
-class RentPropertyAdmin(admin.ModelAdmin):
+class RentPropertyAdmin(BasePropertyAdmin):
     fieldsets = (
         ('اطلاعات اصلی', {
-            'fields': ('title', 'description', 'property_type', 'deposit', 'rent')
+            'fields': ('title', 'description', 'property_type')
         }),
-        ('مشخصات', {
-            'fields': ('area', 'rooms', 'floor', 'total_floors')
+        ('موقعیت مکانی و آدرس', {
+            'fields': ('location', 'district', 'address'),
+            'classes': ('location-fieldset',),
+            'description': 'موقعیت ملک را روی نقشه انتخاب کنید یا آدرس را وارد کنید'
         }),
-        ('موقعیت', {
-            'fields': ('district', 'address', 'latitude', 'longitude')
+        ('مشخصات ملک', {
+            'fields': ('area', 'rooms', 'floor', 'total_floors', 'build_year')
         }),
         ('امکانات', {
-            'fields': ('parking', 'storage', 'elevator', 'balcony')
+            'fields': ('parking', 'elevator', 'storage', 'balcony', 'package',
+                      'security', 'pool', 'gym', 'renovation')
         }),
+        ('شرایط اجاره', {
+            'fields': ('monthly_rent', 'deposit', 'is_convertible',
+                      'minimum_lease', 'has_transfer_fee')
+        }),
+        ('وضعیت', {
+            'fields': ('status', 'is_featured', 'is_active')
+        })
     )
-    list_display = ('title', 'property_type', 'deposit_display', 'rent_display', 'area', 'rooms')
-    list_filter = ('property_type', 'district', 'parking', 'elevator')
-    search_fields = ('title', 'description', 'address')
+    list_display = ('title', 'monthly_rent', 'deposit', 'area', 'status', 'is_active', 'created_at', 'property_type', 'district')
+    list_filter = list(BasePropertyAdmin.list_filter) + ['property_type', 'district']
+
+
     inlines = [PropertyImageInline]
-
-    def deposit_display(self, obj):
-        return f"{obj.deposit:,} تومان"
-    deposit_display.short_description = 'ودیعه'
-
-    def rent_display(self, obj):
-        return f"{obj.rent:,} تومان"
-    rent_display.short_description = 'اجاره ماهانه'
 
 @admin.register(DailyRentProperty)
-class DailyRentPropertyAdmin(admin.ModelAdmin):
+class DailyRentPropertyAdmin(BasePropertyAdmin):
     fieldsets = (
         ('اطلاعات اصلی', {
-            'fields': ('title', 'description', 'property_type', 'daily_price', 'images')
+            'fields': ('title', 'description', 'property_type')  # Added deal_type
         }),
-        ('مشخصات', {
-            'fields': ('area', 'rooms', 'max_guests', 'min_stay', 'max_stay')
+        ('موقعیت مکانی و آدرس', {
+            'fields': ('location', 'district', 'address'),
+            'classes': ('location-fieldset',),
+            'description': 'موقعیت ملک را روی نقشه انتخاب کنید یا آدرس را وارد کنید'
+        }),
+        ('مشخصات ملک', {
+            'fields': ('area', 'rooms', 'floor', 'total_floors', 'build_year')
         }),
         ('امکانات', {
-            'fields': ('wifi', 'tv', 'kitchen', 'washing_machine')
+            'fields': ('parking', 'elevator', 'storage', 'balcony', 'package',
+                      'security', 'pool', 'gym', 'renovation')
         }),
-        ('موقعیت', {
-            'fields': ('address', 'latitude', 'longitude')
+        ('شرایط اقامت', {
+            'fields': ('daily_price', 'min_stay', 'maximum_days', 'max_guests',
+                      'extra_person_fee', 'check_in_time', 'check_out_time')
         }),
+        ('وضعیت', {
+            'fields': ('status', 'is_featured', 'is_active')
+        })
     )
-    list_display = ('title', 'property_type', 'daily_price_display', 'max_guests', 'area')
-    list_filter = ('property_type', 'wifi', 'tv', 'kitchen')
-    search_fields = ('title', 'description', 'address')
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super().get_form(request, obj, **kwargs)
+        if form and hasattr(form, 'instance'):
+            form.instance.deal_type = 'daily'
+        return form
+
+
+
+
+    def save_model(self, request, obj, form, change):
+        obj.deal_type = 'daily'  # Always set deal_type to 'daily'
+        super().save_model(request, obj, form, change)
+
+    list_display = ('title', 'daily_price', 'area', 'status', 'is_active', 'created_at', 'property_type', 'district')
+    list_filter = list(BasePropertyAdmin.list_filter) + ['property_type', 'district']
+
     inlines = [PropertyImageInline]
-
-    def daily_price_display(self, obj):
-        return f"{obj.daily_price:,} تومان"
-    daily_price_display.short_description = 'قیمت روزانه'
-
-@admin.register(Booking)
-class BookingAdmin(admin.ModelAdmin):
-    list_display = ('property', 'user', 'check_in', 'check_out', 'status', 'total_price_display')
-    list_filter = ('status', 'check_in', 'check_out')
-    search_fields = ('property__title', 'user__username')
-    readonly_fields = ('created_at', 'payment_date')
-
-    def total_price_display(self, obj):
-        return f"{obj.total_price:,} تومان"
-    total_price_display.short_description = 'مبلغ کل'
-
-@admin.register(PropertyAvailability)
-class PropertyAvailabilityAdmin(admin.ModelAdmin):
-    list_display = ('property', 'date', 'is_available', 'price_adjustment_display')
-    list_filter = ('is_available', 'date')
-    search_fields = ('property__title',)
-
-    def price_adjustment_display(self, obj):
-        return f"{obj.price_adjustment:,} تومان"
-    price_adjustment_display.short_description = 'تعدیل قیمت'
 
 @admin.register(Visit)
 class VisitAdmin(admin.ModelAdmin):
-    list_display = ('name', 'phone', 'visit_time', 'property', 'created_at', 'status')
-    list_filter = ('visit_time', 'created_at', 'status')
-    search_fields = ('name', 'phone', 'property__title')
+    list_display = ['property', 'visitor', 'visit_date', 'visit_time', 'status', 'created_at']
+    list_filter = ['status', 'visit_date', 'created_at']
+    search_fields = ['property__title', 'visitor__username', 'notes']
+    readonly_fields = ['created_at']
+    
+    fieldsets = (
+        ('اطلاعات بازدید', {
+            'fields': ('property', 'visitor', 'visit_date', 'visit_time')
+        }),
+        ('وضعیت', {
+            'fields': ('status', 'notes')
+        }),
+        ('اطلاعات سیستمی', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )

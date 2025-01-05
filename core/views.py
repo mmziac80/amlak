@@ -1,26 +1,79 @@
+# -*- coding: utf-8 -*-
+from django.shortcuts import render
 from django.views.generic import CreateView, TemplateView, ListView
 from django.contrib.auth import login
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.db.models import Count
+from django.core.serializers import serialize
+import json
+from django.http import JsonResponse
 
 from users.forms import SignUpForm
-from properties.models import SaleProperty, RentProperty, DailyRentProperty
+from properties.models import SaleProperty, RentProperty, DailyRentProperty, Property
 from blog.models import Post
-
+from django.conf import settings
 class HomeView(TemplateView):
     template_name = 'core/home.html'
+    NESHAN_API_KEY = 'web.ea06affc328a4934995818fed7a98b78'
 
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['featured_properties'] = {
-            'sale': SaleProperty.objects.filter(is_featured=True)[:6],
-            'rent': RentProperty.objects.filter(is_featured=True)[:6],
-            'daily': DailyRentProperty.objects.filter(is_featured=True)[:6]
+    def get_property_data(self, property_obj, deal_type):
+        """متد کمکی برای تبدیل اطلاعات ملک به دیکشنری"""
+        price_display = {
+            'sale': lambda x: str(x.total_price) if hasattr(x, 'total_price') else '',
+            'rent': lambda x: f"ودیعه: {x.deposit} - اجاره: {x.monthly_rent}" if hasattr(x, 'deposit') else '',
+            'daily': lambda x: f"اجاره روزانه: {x.daily_price}" if hasattr(x, 'daily_price') else ''
         }
-        context['latest_posts'] = Post.objects.filter(status='published')[:3]
+
+        return {
+            'title': property_obj.title,
+            'price': price_display[deal_type](property_obj),
+            'latitude': float(property_obj.latitude) if property_obj.latitude else None,
+            'longitude': float(property_obj.longitude) if property_obj.longitude else None,
+            'type': deal_type,
+            'image': property_obj.images.first().image.url if property_obj.images.exists() else '',
+            'url': property_obj.get_absolute_url(),
+            'address': property_obj.address,
+            'district': property_obj.district,
+            'property_type': property_obj.get_property_type_display(),
+            'area': property_obj.area,
+            'rooms': property_obj.rooms
+        }
+
+
+    def get_context_data(self, *args, **kwargs):
+        context = super().get_context_data(*args, **kwargs)
+        context['NESHAN_API_KEY'] = self.NESHAN_API_KEY
+        
+        # بهینه‌سازی کوئری‌ها
+        property_queries = {
+            'sale': SaleProperty.objects.select_related('owner').prefetch_related('images'),
+            'rent': RentProperty.objects.select_related('owner').prefetch_related('images'),
+            'daily': DailyRentProperty.objects.select_related('owner').prefetch_related('images')
+        }
+
+        all_properties = []
+        featured_properties = {}
+
+        # جمع‌آوری داده‌ها در یک حلقه
+        for deal_type, query in property_queries.items():
+            properties = query.all()
+            all_properties.extend([
+                self.get_property_data(prop, deal_type) 
+                for prop in properties
+            ])
+            featured_properties[deal_type] = properties.filter(is_featured=True)[:6]
+
+        context['properties_json'] = json.dumps(all_properties)
+        context['featured_properties'] = featured_properties
+
         return context
+
+
+
+
+
 
 class SignUpView(CreateView):
     form_class = SignUpForm
@@ -58,6 +111,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         }
 
         return context
+
 
 class AboutView(TemplateView):
     template_name = 'core/about.html'
@@ -103,6 +157,7 @@ class StatsView(LoginRequiredMixin, TemplateView):
 
         return context
 
+
 class SearchView(ListView):
     template_name = 'core/search_results.html'
     context_object_name = 'results'
@@ -129,3 +184,36 @@ class SearchView(ListView):
         context['query'] = self.request.GET.get('q', '')
         context['property_type'] = self.request.GET.get('type', 'all')
         return context
+def property_locations_api(request):
+    # دریافت نوع ملک از پارامترهای درخواست
+    property_type = request.GET.get('type', 'all')
+
+    # انتخاب مدل مناسب بر اساس نوع ملک با فیلتر موقعیت جغرافیایی
+    base_query = {
+        'latitude__isnull': False,
+        'longitude__isnull': False
+    }
+
+    if property_type == 'sale':
+        properties = SaleProperty.objects.filter(**base_query)
+    elif property_type == 'rent':
+        properties = RentProperty.objects.filter(**base_query)
+    elif property_type == 'daily':
+        properties = DailyRentProperty.objects.filter(**base_query)
+    else:
+        properties = Property.objects.filter(**base_query)
+
+    # بهینه‌سازی کوئری با select_related و prefetch_related
+    properties = properties.select_related('owner').prefetch_related('images')
+
+    # استفاده از متد to_map_data برای آماده‌سازی داده‌ها
+    data = [prop.to_map_data() for prop in properties]
+
+    return JsonResponse(data, safe=False)
+
+
+def custom_404(request, exception):
+    return render(request, 'core/404.html', status=404)
+
+def custom_500(request):
+    return render(request, 'core/500.html', status=500)

@@ -1,0 +1,54 @@
+/* static/css/components/property-card.css */
+@import '../shared/glass-effects.css';
+
+.property-card {
+    composes: glass-effect;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+/* Image styles */
+.property-card__image {
+    height: 200px;
+    object-fit: cover;
+    border-radius: 10px;
+    transition: transform 0.5s ease;
+}
+
+.property-card:hover .property-card__image {
+    transform: scale(1.05);
+}
+
+/* Content styles */
+.property-card__title {
+    color: var(--ai-primary);
+    margin: 15px 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.property-card__price {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--ai-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* Additional features */
+.property-card__features {
+    display: flex;
+    gap: 1rem;
+    margin: 1rem 0;
+}
+
+.property-card__badge {
+    background: rgba(var(--ai-primary-rgb), 0.1);
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+}

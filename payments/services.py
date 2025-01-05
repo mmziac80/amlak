@@ -1,142 +1,110 @@
 from django.core.cache import cache
 from django.conf import settings
 from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 from django.core.mail import send_mail
-from tenacity import retry, stop_after_attempt, wait_exponential
-from django_ratelimit.decorators import ratelimit
-import requests
+from django.utils import timezone
 import logging
-from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 
 class BankService:
     def __init__(self):
-        self.api_key = settings.BANK_API_KEY
-        self.base_url = settings.BANK_API_URL
-        self.cache_timeout = 3600  # 1 hour
+        self.api_key = settings.PAYMENT_SETTINGS['MERCHANT_ID']
+        self.base_url = 'https://api.bank.com/v1'  # آدرس تستی
+        self.cache_timeout = 3600
 
-    @ratelimit(key='ip', rate='100/h')
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
     def transfer_to_owner(self, amount, destination, description):
-        """انتقال وجه به حساب مالک"""
-        self._validate_transfer_input(amount, destination)
-        
+        """انتقال وجه به حساب مالک - فعلا شبیه‌سازی شده"""
         try:
-            response = requests.post(
-                f"{self.base_url}/transfer/",
-                json={
-                    'amount': amount,
-                    'destination': destination,
-                    'description': description
-                },
-                headers=self._get_headers()
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                self._cache_transfer_result(data)
-                return {
-                    'status': 'success',
-                    'tracking_code': data['tracking_code'],
-                    'reference_id': data['reference_id']
-                }
-                
-            logger.error(f"Bank transfer failed: {response.text}")
-            return {'status': 'failed', 'error': 'خطا در انتقال وجه'}
-            
+            print(f"Simulating bank transfer: Amount={amount}, To={destination}")
+            return {
+                'status': 'success',
+                'tracking_code': '123456',
+                'reference_id': 'REF123'
+            }
         except Exception as e:
-            logger.exception("Bank transfer exception")
+            logger.exception("Bank transfer failed")
             return {'status': 'failed', 'error': str(e)}
 
     def verify_transfer(self, tracking_code):
-        """استعلام وضعیت انتقال وجه"""
-        cache_key = f'transfer_status_{tracking_code}'
-        cached_result = cache.get(cache_key)
-        if cached_result:
-            return cached_result
+        """استعلام وضعیت انتقال - فعلا شبیه‌سازی شده"""
+        print(f"Simulating transfer verification: {tracking_code}")
+        return {'status': 'success'}
 
+class SMSService:
+    def __init__(self):
+        self.api_key = settings.SMS_SETTINGS['API_KEY']
+        self.sender = settings.SMS_SETTINGS['SENDER']
+        self.is_fake = settings.SMS_SETTINGS['IS_FAKE']
+        
+    def send(self, phone, message):
+        """ارسال پیامک"""
         try:
-            response = requests.get(
-                f"{self.base_url}/verify/{tracking_code}/",
-                headers=self._get_headers()
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                cache.set(cache_key, result, self.cache_timeout)
-                return result
+            if self.is_fake:
+                # حالت تستی - نمایش در کنسول
+                print(f"Sending SMS from {self.sender} to {phone}:")
+                print(f"Message: {message}")
+                return True
+            else:
+                # حالت واقعی - ارسال واقعی پیامک
+                return self._send_real_sms(phone, message)
                 
-            return {'status': 'failed'}
-            
         except Exception as e:
-            logger.exception("Bank verify exception")
-            return {'status': 'failed'}
+            logger.exception("SMS sending failed")
+            return False
+            
+    def _send_real_sms(self, phone, message):
+        """ارسال واقعی پیامک - برای اتصال به سرویس"""
+        try:
+            # TODO: اتصال به API سرویس پیامک
+            return True
+        except Exception as e:
+            logger.exception("Real SMS sending failed")
+            return False
 
-    def _get_headers(self):
-        return {
-            'Authorization': f'Bearer {self.api_key}',
-            'Content-Type': 'application/json'
-        }
-
-    def _validate_transfer_input(self, amount, destination):
-        if not isinstance(amount, (int, float, Decimal)) or amount <= 0:
-            raise ValueError("مبلغ نامعتبر است")
-        if not destination or len(destination) < 10:
-            raise ValueError("شماره حساب مقصد نامعتبر است")
-
-    def _cache_transfer_result(self, data):
-        cache_key = f"transfer_{data['tracking_code']}"
-        cache.set(cache_key, data, self.cache_timeout)
-
+class EmailService:
+    def send(self, to_email, subject, template, context):
+        """ارسال ایمیل - نمایش در کنسول"""
+        try:
+            print(f"Sending email to {to_email}")
+            print(f"Subject: {subject}")
+            print(f"Context: {context}")
+            return True
+        except Exception as e:
+            logger.exception("Email sending failed")
+            return False
 class NotificationService:
+    def __init__(self):
+        self.sms_service = SMSService()
+        self.email_service = EmailService()
+
     def send_settlement_notification(self, user, amount, tracking_code):
         """ارسال نوتیفیکیشن تسویه به کاربر"""
-        notifications = []
-        
         # ارسال پیامک
-        sms_result = self.send_sms(
+        sms_result = self._send_sms(
             phone=user.phone,
             message=self._get_settlement_sms_text(amount, tracking_code)
         )
-        notifications.append(('sms', sms_result))
         
         # ارسال ایمیل
-        email_result = self.send_email(
-            email=user.email,
-            subject="تسویه حساب موفق",
-            template="emails/settlement_success.html",
-            context=self._get_settlement_email_context(user, amount, tracking_code)
-        )
-        notifications.append(('email', email_result))
+        email_result = True
+        if user.email:
+            email_result = self._send_email(
+                email=user.email,
+                subject="تسویه حساب موفق",
+                template="emails/settlement_success.html",
+                context=self._get_settlement_email_context(user, amount, tracking_code)
+            )
         
-        # ذخیره نوتیفیکیشن
-        self._save_notification(user, amount, tracking_code)
-        
-        return all(result for _, result in notifications)
+        return sms_result and email_result
 
-    def bulk_send_sms(self, messages):
-        """ارسال گروهی پیامک"""
-        sms_service = SMSService()
-        results = []
-        
-        for phone, message in messages:
-            result = sms_service.send(phone, message)
-            results.append((phone, result))
-            
-        return results
+    def _send_sms(self, phone, message):
+        """فراخوانی از SMSService برای ارسال پیامک"""
+        return self.sms_service.send(phone, message)
 
-    def bulk_send_email(self, emails):
-        """ارسال گروهی ایمیل"""
-        email_service = EmailService()
-        results = []
-        
-        for email_data in emails:
-            result = email_service.send(**email_data)
-            results.append((email_data['email'], result))
-            
-        return results
+    def _send_email(self, email, subject, template, context):
+        """فراخوانی از EmailService برای ارسال ایمیل"""
+        return self.email_service.send(email, subject, template, context)
 
     def _get_settlement_sms_text(self, amount, tracking_code):
         return f"""تسویه حساب با موفقیت انجام شد
@@ -147,54 +115,6 @@ class NotificationService:
         return {
             'user': user,
             'amount': amount,
-            'tracking_code': tracking_code
+            'tracking_code': tracking_code,
+            'date': timezone.now()
         }
-
-    def _save_notification(self, user, amount, tracking_code):
-        Notification.objects.create(
-            user=user,
-            title="تسویه حساب",
-            message=f"تسویه حساب به مبلغ {amount:,} تومان با موفقیت انجام شد",
-            type="settlement",
-            reference_code=tracking_code
-        )
-
-class SMSService:
-    def __init__(self):
-        self.api_key = settings.SMS_API_KEY
-        self.sender = settings.SMS_SENDER
-        self.base_url = settings.SMS_API_URL
-
-    @retry(stop=stop_after_attempt(3), wait=wait_exponential(multiplier=1, min=4, max=10))
-    def send(self, phone, message):
-        try:
-            response = requests.post(
-                f"{self.base_url}/send/",
-                json={
-                    'receptor': phone,
-                    'message': message,
-                    'sender': self.sender
-                },
-                headers={'Authorization': f'Bearer {self.api_key}'}
-            )
-            return response.status_code == 200
-        except Exception as e:
-            logger.exception("SMS sending failed")
-            return False
-
-class EmailService:
-    @retry(stop=stop_after_attempt(3))
-    def send(self, email, subject, template, context):
-        try:
-            html_message = render_to_string(template, context)
-            send_mail(
-                subject=subject,
-                message=strip_tags(html_message),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[email],
-                html_message=html_message
-            )
-            return True
-        except Exception as e:
-            logger.exception("Email sending failed")
-            return False

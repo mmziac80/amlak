@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import permissions
 from .models import Payment
 from .constants import PAYMENT_STATUS
@@ -78,3 +80,4 @@ class CanManageRefunds(permissions.BasePermission):
             request.user.is_authenticated and
             request.user.has_perm('payments.manage_refunds')
         )
+

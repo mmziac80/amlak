@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from functools import wraps
 from django.core.cache import cache
 from django.utils import timezone

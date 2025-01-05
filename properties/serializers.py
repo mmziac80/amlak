@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import serializers
 from django.utils import timezone
+from decimal import Decimal
 
 from .models import (
     SaleProperty, 
@@ -8,6 +11,8 @@ from .models import (
     PropertyImage,
     PropertyFeature,
     Visit,
+    Booking,
+    Property,
     Booking
 )
 
@@ -73,7 +78,7 @@ class DailyRentPropertySerializer(serializers.ModelSerializer):
             'daily_price', 'max_guests', 'property_type',
             'address', 'images', 'features', 'wifi',
             'parking', 'kitchen', 'tv', 'washing_machine',
-            'is_available', 'created_at', 'updated_at'
+            'is_available', 'min_stay','created_at', 'updated_at'
         ]
 
     def get_is_available(self, obj):
@@ -132,10 +137,11 @@ class VisitSerializer(serializers.ModelSerializer):
     class Meta:
         model = Visit
         fields = [
-            'id', 'property', 'property_title', 'name',
-            'phone', 'visit_time', 'status', 'created_at'
+            'id', 'property', 'visitor', 
+            'visit_date', 'visit_time', 'notes',
+            'status', 'created_at'
         ]
-        read_only_fields = ['status']
+        read_only_fields = ['status', 'visitor']
 
     def validate_visit_time(self, value):
         if value < timezone.now():
@@ -144,25 +150,47 @@ class VisitSerializer(serializers.ModelSerializer):
             )
         return value
 
-from rest_framework import serializers
-from .models import SaleProperty, RentProperty, DailyRentProperty
+from decimal import Decimal
 
 class PropertySerializer(serializers.ModelSerializer):
-    property_type_display = serializers.CharField(source='get_property_type_display', read_only=True)
-    district_display = serializers.CharField(source='get_district_display', read_only=True)
-    owner_name = serializers.CharField(source='owner.get_full_name', read_only=True)
-    
+    latitude = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=7,
+        min_value=Decimal('-90'),
+        max_value=Decimal('90')
+    )
+    longitude = serializers.DecimalField(
+        max_digits=10, 
+        decimal_places=7,
+        min_value=Decimal('-180'),
+        max_value=Decimal('180')
+    )
+class PropertyLocationSerializer(serializers.ModelSerializer):
+    price_display = serializers.SerializerMethodField()
+    property_type = serializers.CharField(source='get_property_type_display', read_only=True)
+    distance = serializers.FloatField(read_only=True, required=False)
+
+    def get_price_display(self, obj):
+        if hasattr(obj, 'saleproperty'):
+            return f"قیمت: {obj.saleproperty.total_price:,} تومان"
+        elif hasattr(obj, 'rentproperty'):
+            return f"ودیعه: {obj.rentproperty.deposit:,} - اجاره: {obj.rentproperty.monthly_rent:,} تومان"
+        elif hasattr(obj, 'dailyrentproperty'):
+            return f"شبی {obj.dailyrentproperty.daily_price:,} تومان"
+        return "قیمت تعیین نشده"
+
+
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if hasattr(instance, 'distance'):
+            data['distance'] = round(float(instance.distance), 2)
+        return data
+
     class Meta:
+        model = Property
         fields = [
-            'id', 'title', 'description', 'property_type', 'property_type_display',
-            'district', 'district_display', 'address', 'area', 'rooms',
-            'floor', 'total_floors', 'parking', 'elevator', 'storage',
-            'balcony', 'created_at', 'owner', 'owner_name'
+            'id', 'title', 'latitude', 'longitude',
+            'address', 'deal_type', 'price_display',
+            'property_type', 'status', 'distance'
         ]
-        
-    def get_serializer_class(self):
-        if isinstance(self.instance, SaleProperty):
-            return SalePropertySerializer
-        elif isinstance(self.instance, RentProperty):
-            return RentPropertySerializer
-        return DailyRentPropertySerializer

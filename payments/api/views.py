@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -165,3 +167,4 @@ class CommissionViewSet(viewsets.ModelViewSet):
             return Response({'status': 'نرخ کمیسیون بروزرسانی شد'})
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+

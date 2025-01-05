@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import time
 from django.conf import settings
 from django.core.cache import cache
@@ -163,3 +165,4 @@ class MaintenanceMiddleware:
 
     def is_allowed_ip(self, request):
         return request.META.get('REMOTE_ADDR') in settings.MAINTENANCE_ALLOWED_IPS
+

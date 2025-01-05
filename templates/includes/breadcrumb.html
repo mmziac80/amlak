@@ -54,7 +54,7 @@
         {% if properties %}
             {% for property in properties %}
                 <div class="col-md-6 col-lg-4 mb-4">
-                    {% include 'includes/property_card.html' with property=property %}
+                    {% include 'components/property_card.html' with property=property %}
                 </div>
             {% endfor %}
         {% else %}

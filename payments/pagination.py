@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework.pagination import (
     PageNumberPagination,
     LimitOffsetPagination,
@@ -62,3 +64,4 @@ class RefundRequestPagination(StandardResultsSetPagination):
 class PaymentReportPagination(StandardResultsSetPagination):
     """صفحه‌بندی گزارش‌های پرداخت"""
     page_size = 30
+

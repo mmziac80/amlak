@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.views.generic import ListView, DetailView, CreateView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404, redirect, render
@@ -188,3 +190,4 @@ def settlement_404_error(request, exception):
 
 def settlement_500_error(request):
     return render(request, 'settlements/errors/500.html', status=500)
+

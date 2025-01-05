@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import logging
 import json
 from django.conf import settings
@@ -163,3 +165,4 @@ class PerformanceLogger:
                 'response_time': response_time
             }
         )
+

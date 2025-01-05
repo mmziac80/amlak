@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import serializers
 from django.utils import timezone
 from django.db.models import Avg
@@ -125,3 +127,4 @@ class SettlementFilterSerializer(serializers.Serializer):
                 raise serializers.ValidationError('حداقل مبلغ نمی‌تواند بیشتر از حداکثر مبلغ باشد')
                 
         return data
+

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -177,3 +179,4 @@ class SettlementVerifyView(APIView):
             'bank_reference_id': settlement.bank_reference_id,
             'verified_at': settlement.settled_at
         })
+

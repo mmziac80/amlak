@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django_filters import rest_framework as filters
 from django.db.models import Q
 from django.utils import timezone
@@ -110,3 +112,4 @@ class SettlementReportFilter(filters.FilterSet):
         if value == 'business':
             return queryset.filter(owner__is_business=True)
         return queryset.filter(owner__is_business=False)
+

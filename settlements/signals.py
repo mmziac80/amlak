@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.db.models.signals import post_save, pre_save, pre_delete
 from django.dispatch import receiver
 from django.utils import timezone
@@ -57,3 +59,4 @@ def track_settlement_timing(sender, instance, created, **kwargs):
     if instance.status == 'completed':
         processing_time = timezone.now() - instance.created_at
         SettlementLogger.log_settlement_timing(instance, processing_time)
+

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 class PaymentError(Exception):
     """کلاس پایه برای خطاهای پرداخت"""
     pass

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from .config import RATE_LIMIT_SETTINGS
@@ -48,3 +50,4 @@ class IPRateThrottle(AnonRateThrottle):
             'scope': self.scope,
             'ident': ident
         }
+

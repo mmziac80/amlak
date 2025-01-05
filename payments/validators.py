@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -26,15 +28,15 @@ class CommissionRateValidator:
 
 class TrackingCodeValidator(RegexValidator):
     regex = r'^[A-Za-z0-9\-]{5,50}'
-    message = _('کد پیگیری باید شامل حروف، اعداد و خط تیره باشد')
+    message = _('کد پیگیری باید شامل حروف و یا عدد باشد')
 
 class ReferenceIdValidator(RegexValidator):
     regex = r'^[A-Za-z0-9\-]{10,100}'
-    message = _('شناسه مرجع باید شامل حروف، اعداد و خط تیره باشد')
+    message = _('شناسه مرجع باید شامل حروف و یا عدد باشد')
 
 class ShebaValidator(RegexValidator):
     regex = r'^IR[0-9]{24}'
-    message = _('شماره شبا باید با IR شروع شده و شامل 24 رقم باشد')
+    message = _('شماره شبا باید با IR شروع شود و شامل 24 رقم باشد')
 
 class BankAccountValidator(RegexValidator):
     regex = r'^[0-9]{9,16}'
@@ -104,3 +106,6 @@ def validate_card_number(value):
         s += n
     if s % 10 != 0:
         raise ValidationError(_('شماره کارت نامعتبر است'))
+
+
+

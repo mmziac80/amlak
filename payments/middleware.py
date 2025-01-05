@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.utils import timezone
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -51,3 +53,4 @@ class PaymentVerificationMiddleware:
 
         response = self.get_response(request)
         return response
+

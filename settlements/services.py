@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.conf import settings
 from django.utils import timezone
 from django.core.mail import send_mail
@@ -233,3 +235,4 @@ class ReportService:
             logger.info(f"Monthly report sent for {month.strftime('%B %Y')}")
         except Exception as e:
             logger.error(f"Failed to send monthly report: {str(e)}")
+

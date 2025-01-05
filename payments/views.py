@@ -1,8 +1,9 @@
+# -*- coding: utf-8 -*-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.views import View
 from django.utils import timezone
-from django.db import transaction, models
+from django.db import transaction
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.http import JsonResponse, Http404
 from django.urls import reverse_lazy
@@ -19,17 +20,14 @@ from .forms import (
     PaymentConfirmForm,
     RefundRequestForm
 )
-from .serializers import (
-    PaymentSerializer, 
-    PaymentDetailSerializer,
-    RefundRequestSerializer
-)
-from .utils import init_payment, verify_payment, send_payment_sms
+from .serializers import PaymentSerializer
+from .utils import init_payment, verify_payment, send_sms
 from .constants import PAYMENT_STATUS, SMS_TEMPLATES
 from .tasks import settle_with_owner
 from properties.models import Property
 
 class PaymentViewSet(viewsets.ModelViewSet):
+    """مدیریت پرداخت‌ها"""
     serializer_class = PaymentSerializer
     permission_classes = [IsAuthenticated]
     
@@ -37,11 +35,6 @@ class PaymentViewSet(viewsets.ModelViewSet):
         if self.request.user.is_staff:
             return Payment.objects.all()
         return Payment.objects.filter(renter=self.request.user)
-    
-    def get_serializer_class(self):
-        if self.action == 'retrieve':
-            return PaymentDetailSerializer
-        return PaymentSerializer
 
     @action(detail=True, methods=['post'])
     def initiate_payment(self, request, pk=None):
@@ -49,14 +42,8 @@ class PaymentViewSet(viewsets.ModelViewSet):
         bank_response = payment.send_to_bank()
         return Response(bank_response)
 
-class RefundRequestViewSet(viewsets.ModelViewSet):
-    serializer_class = RefundRequestSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return RefundRequest.objects.filter(user=self.request.user)
-
 class PaymentInitiateView(LoginRequiredMixin, CreateView):
+    """شروع فرآیند پرداخت"""
     model = Payment
     form_class = PaymentInitiateForm
     template_name = 'payments/payment_initiate.html'
@@ -73,10 +60,10 @@ class PaymentInitiateView(LoginRequiredMixin, CreateView):
         payment.owner = payment.property.owner
         payment.calculate_amounts()
         payment.save()
-        
         return redirect('payments:payment_confirm', payment.id)
 
 class PaymentConfirmView(LoginRequiredMixin, DetailView):
+    """تایید و ارسال به درگاه پرداخت"""
     model = Payment
     template_name = 'payments/payment_confirm.html'
     
@@ -98,8 +85,8 @@ class PaymentConfirmView(LoginRequiredMixin, DetailView):
             messages.error(request, result['error'])
         
         return render(request, self.template_name, {'form': form, 'payment': payment})
-
 class PaymentCallbackView(LoginRequiredMixin, View):
+    """بازگشت کاربر از درگاه پرداخت"""
     @transaction.atomic
     def get(self, request):
         authority = request.GET.get('Authority')
@@ -124,7 +111,7 @@ class PaymentCallbackView(LoginRequiredMixin, View):
                 
                 settle_with_owner.delay(payment.id)
                 
-                send_payment_sms(
+                send_sms(
                     payment.renter.phone, 
                     SMS_TEMPLATES['PAYMENT_SUCCESS'].format(
                         tracking_code=payment.bank_tracking_code
@@ -143,8 +130,8 @@ class PaymentCallbackView(LoginRequiredMixin, View):
             messages.error(request, 'پرداخت ناموفق بود')
             
         return redirect('payments:payment_failed', payment.id)
-
 class PaymentListView(LoginRequiredMixin, ListView):
+    """لیست پرداخت‌ها"""
     model = Payment
     template_name = 'payments/payment_list.html'
     context_object_name = 'payments'
@@ -172,50 +159,8 @@ class PaymentListView(LoginRequiredMixin, ListView):
         context = super().get_context_data(**kwargs)
         context['filter_form'] = PaymentFilterForm(self.request.GET)
         return context
-
-class PaymentHistoryView(LoginRequiredMixin, ListView):
-    model = Payment
-    template_name = 'payments/payment_history.html'
-    context_object_name = 'payments'
-    paginate_by = 10
-
-    def get_queryset(self):
-        if self.request.user.is_staff:
-            return Payment.objects.all()
-        return Payment.objects.filter(
-            models.Q(renter=self.request.user) | 
-            models.Q(owner=self.request.user)
-        ).order_by('-created_at')
-
-class PaymentDetailView(LoginRequiredMixin, DetailView):
-    model = Payment
-    template_name = 'payments/payment_detail.html'
-    
-    def get_object(self):
-        payment = get_object_or_404(Payment, id=self.kwargs['payment_id'])
-        if not (self.request.user.is_staff or 
-                self.request.user in [payment.renter, payment.owner]):
-            raise Http404
-        return payment
-
-class PaymentSuccessView(LoginRequiredMixin, DetailView):
-    model = Payment
-    template_name = 'payments/payment_success.html'
-    context_object_name = 'payment'
-
-    def get_object(self):
-        return get_object_or_404(
-            Payment,
-            id=self.kwargs['payment_id'],
-            status=PAYMENT_STATUS['SUCCESS']
-        )
-
-class PaymentFailedView(LoginRequiredMixin, DetailView):
-    model = Payment
-    template_name = 'payments/payment_failed.html'
-    context_object_name = 'payment'
-
 class PaymentReceiptView(LoginRequiredMixin, DetailView):
+    """نمایش رسید پرداخت"""
     model = Payment
     template_name = 'payments/payment_receipt.html'
     context_object_name = 'payment'
@@ -232,6 +177,7 @@ class PaymentReceiptView(LoginRequiredMixin, DetailView):
         return payment
 
 class RefundRequestView(LoginRequiredMixin, CreateView):
+    """ثبت درخواست استرداد"""
     model = RefundRequest
     form_class = RefundRequestForm
     template_name = 'payments/refund_request.html'
@@ -244,3 +190,33 @@ class RefundRequestView(LoginRequiredMixin, CreateView):
         refund.save()
         messages.success(self.request, 'درخواست استرداد با موفقیت ثبت شد')
         return super().form_valid(form)
+
+class PaymentVerifyView(LoginRequiredMixin, View):
+    """تایید پرداخت"""
+    def get(self, request):
+        authority = request.GET.get('Authority')
+        status = request.GET.get('Status')
+        
+        payment = get_object_or_404(Payment, reference_id=authority)
+        
+        if status == 'OK':
+            result = verify_payment(payment)
+            if result['success']:
+                messages.success(request, 'پرداخت با موفقیت انجام شد')
+                return redirect('payments:payment_success', payment.id)
+            else:
+                messages.error(request, result['error'])
+        else:
+            messages.error(request, 'پرداخت ناموفق بود')
+            
+        return redirect('payments:payment_failed', payment.id)
+
+class PaymentHistoryView(LoginRequiredMixin, ListView):
+    """تاریخچه پرداخت‌ها"""
+    model = Payment
+    template_name = 'payments/payment_history.html'
+    context_object_name = 'payments'
+    paginate_by = 10
+
+    def get_queryset(self):
+        return Payment.objects.filter(user=self.request.user).order_by('-created_at')

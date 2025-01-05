@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
@@ -516,3 +518,4 @@ class SettlementTemplateTagsTests(TestCase):
         self.settlement.created_at = timezone.now() - timezone.timedelta(hours=12)
         context = Context({'settlement': self.settlement})
         self.assertIn('12 ساعت', template.render(context))
+

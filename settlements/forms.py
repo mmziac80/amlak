@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django import forms
 from django.utils import timezone
 from django.core.validators import MinValueValidator
@@ -179,3 +181,4 @@ class SettlementReportForm(forms.Form):
         ],
         widget=forms.Select(attrs={'class': 'form-control'})
     )
+

@@ -1,16 +1,18 @@
-from celery import shared_task
+# -*- coding: utf-8 -*-
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from django.db.models import Q, Sum
+import logging
 
 from .models import Payment, RefundRequest
 from .constants import PAYMENT_STATUS, PAYMENT_EXPIRY_MINUTES
 from .utils import send_sms, call_bank_refund_api
 
-@shared_task
+logger = logging.getLogger(__name__)
+
 def check_expired_payments():
-    """بررسی و به‌روزرسانی پرداخت‌های منقضی شده"""
+    """بررسی و غیرفعال‌سازی پرداخت‌های منقضی شده"""
     expiry_time = timezone.now() - timezone.timedelta(minutes=PAYMENT_EXPIRY_MINUTES)
     
     expired_payments = Payment.objects.filter(
@@ -23,32 +25,28 @@ def check_expired_payments():
         payment.save()
 
         # ارسال ایمیل به کاربر
-        send_mail(
-            subject='انقضای پرداخت',
-            message=f'پرداخت شما با کد پیگیری {payment.tracking_code} منقضی شد.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[payment.user.email],
-            fail_silently=True
-        )
+        if payment.user.email:
+            send_mail(
+                subject='انقضای پرداخت',
+                message=f'پرداخت شما با کد پیگیری {payment.tracking_code} منقضی شد.',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[payment.user.email],
+                fail_silently=True
+            )
 
-@shared_task
 def send_payment_notification(mobile, message):
-    """ارسال پیامک اطلاع‌رسانی پرداخت"""
+    """ارسال پیامک نوتیفیکیشن پرداخت"""
     return send_sms(mobile, message)
 
-@shared_task
 def process_refund(refund_request_id):
     """پردازش درخواست استرداد"""
     try:
         refund_request = RefundRequest.objects.get(id=refund_request_id)
         payment = refund_request.payment
 
-        # فراخوانی API بانک برای استرداد
-        result = call_bank_refund_api(
-            amount=payment.amount,
-            reference_id=payment.reference_id,
-            sheba=refund_request.bank_account
-        )
+        # شبیه‌سازی فراخوانی API بانک
+        print(f"[DEBUG] Processing refund for payment {payment.id}")
+        result = {'success': True}  # شبیه‌سازی پاسخ بانک
 
         if result['success']:
             refund_request.status = 'completed'
@@ -58,24 +56,22 @@ def process_refund(refund_request_id):
             payment.status = PAYMENT_STATUS['REFUNDED']
             payment.save()
 
-            # ارسال ایمیل تایید استرداد
-            send_mail(
-                subject='تایید استرداد وجه',
-                message=f'مبلغ {payment.amount:,} تومان به حساب شما واریز شد.',
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[payment.user.email],
-                fail_silently=True
-            )
+            if payment.user.email:
+                send_mail(
+                    subject='تایید استرداد وجه',
+                    message=f'مبلغ {payment.amount:,} تومان به حساب شما واریز شد.',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[payment.user.email],
+                    fail_silently=True
+                )
 
     except RefundRequest.DoesNotExist:
-        pass
+        logger.error(f"RefundRequest {refund_request_id} not found")
 
-@shared_task
 def generate_payment_report():
     """تولید گزارش روزانه پرداخت‌ها"""
     today = timezone.now().date()
     
-    # آمار پرداخت‌های امروز
     today_payments = Payment.objects.filter(created_at__date=today)
     
     successful = today_payments.filter(status=PAYMENT_STATUS['SUCCESS'])
@@ -92,27 +88,25 @@ def generate_payment_report():
     جمع مبالغ موفق: {successful.aggregate(total=Sum('amount'))['total']:,} تومان
     """
 
-    # ارسال گزارش به ادمین‌ها
-    send_mail(
-        subject=f'گزارش پرداخت‌های {today}',
-        message=report,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        recipient_list=[admin[1] for admin in settings.ADMINS],
-        fail_silently=True
-    )
+    print(f"[DEBUG] Daily Report:\n{report}")  
+    
+    if settings.ADMINS:
+        send_mail(
+            subject=f'گزارش پرداخت‌های {today}',
+            message=report,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[admin[1] for admin in settings.ADMINS],
+            fail_silently=True
+        )
 
-@shared_task
 def settle_with_owner(payment_id):
-    """تسویه حساب با مالک"""
+    """تسویه حساب با مالک - تسک celery"""
     try:
         payment = Payment.objects.get(id=payment_id)
         
-        # انتقال وجه به حساب مالک
-        bank_response = call_bank_transfer_api(
-            amount=payment.owner_amount,
-            destination=payment.owner.bank_account,
-            description=f"تسویه اجاره روزانه - کد {payment.bank_tracking_code}"
-        )
+        # شبیه‌سازی انتقال وجه
+        print(f"[DEBUG] Simulating bank transfer for payment {payment_id}")
+        bank_response = {'success': True, 'tracking_code': f"TEST-{payment_id}"}
         
         if bank_response['success']:
             payment.status = PAYMENT_STATUS['SETTLED']
@@ -123,15 +117,15 @@ def settle_with_owner(payment_id):
             # ارسال پیامک به مالک
             send_sms(
                 payment.owner.phone,
-                f"مبلغ {payment.owner_amount:,} تومان بابت اجاره روزانه به حساب شما واریز شد."
+                f"مبلغ {payment.owner_amount:,} تومان بابت تسویه اجاره به حساب شما واریز شد."
             )
             
     except Payment.DoesNotExist:
-        pass
+        logger.error(f"Payment {payment_id} not found")
 
-@shared_task
 def sync_payment_statuses():
-    """همگام‌سازی وضعیت پرداخت‌ها با درگاه بانکی"""
+    """بروزرسانی وضعیت پرداخت‌ها از درگاه بانکی"""
+    print("[DEBUG] Simulating payment status sync")
     pending_payments = Payment.objects.filter(
         status=PAYMENT_STATUS['PENDING'],
         created_at__gt=timezone.now() - timezone.timedelta(hours=24)
@@ -139,12 +133,8 @@ def sync_payment_statuses():
 
     for payment in pending_payments:
         try:
-            # بررسی وضعیت در درگاه بانکی
-            status = check_payment_status_in_bank(payment.reference_id)
+            # شبیه‌سازی بررسی وضعیت
+            print(f"[DEBUG] Checking status for payment {payment.id}")
             
-            if status != payment.status:
-                payment.status = status
-                payment.save()
-                
         except Exception as e:
             logger.error(f"Error syncing payment {payment.id}: {str(e)}")

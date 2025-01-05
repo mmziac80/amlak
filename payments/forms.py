@@ -1,27 +1,28 @@
+# -*- coding: utf-8 -*-
 from django import forms
 from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils.translation import gettext_lazy as _
 from .models import Payment, RefundRequest
 from .constants import PAYMENT_STATUS
 from .validators import (
     PaymentAmountValidator,
-    BankAccountValidator, 
-    validate_refund_reason
+    BankAccountValidator
 )
-
 class PaymentInitiateForm(forms.ModelForm):
+    """فرم شروع پرداخت"""
     check_in_date = forms.DateField(
+        label=_('تاریخ ورود'),
         widget=forms.DateInput(attrs={
             'type': 'date',
-            'class': 'form-control',
-            'placeholder': 'تاریخ ورود'
+            'class': 'form-control'
         })
     )
+    
     check_out_date = forms.DateField(
+        label=_('تاریخ خروج'),
         widget=forms.DateInput(attrs={
             'type': 'date', 
-            'class': 'form-control',
-            'placeholder': 'تاریخ خروج'
+            'class': 'form-control'
         })
     )
 
@@ -29,36 +30,28 @@ class PaymentInitiateForm(forms.ModelForm):
         model = Payment
         fields = ['check_in_date', 'check_out_date']
 
-    def __init__(self, *args, **kwargs):
-        self.property = kwargs.pop('property')
-        super().__init__(*args, **kwargs)
-
     def clean(self):
         cleaned_data = super().clean()
         check_in = cleaned_data.get('check_in_date')
         check_out = cleaned_data.get('check_out_date')
         
         if check_in and check_out:
-            # تاریخ ورود نباید قبل از امروز باشد
             if check_in < timezone.now().date():
                 raise forms.ValidationError('تاریخ ورود نمی‌تواند در گذشته باشد')
 
-            # تاریخ ورود باید قبل از خروج باشد
             if check_in >= check_out:
                 raise forms.ValidationError('تاریخ ورود باید قبل از تاریخ خروج باشد')
             
-            # بررسی رزرو بودن تاریخ‌ها
             if self.property.is_reserved(check_in, check_out):
                 raise forms.ValidationError('این تاریخ‌ها قبلاً رزرو شده است')
             
-            # محاسبه تعداد روزها و قیمت کل
             days = (check_out - check_in).days
             total_amount = self.property.daily_price * days
             cleaned_data['total_amount'] = total_amount
             
         return cleaned_data
-
 class PaymentConfirmForm(forms.Form):
+    """فرم تایید پرداخت"""
     terms_accepted = forms.BooleanField(
         required=True,
         label='قوانین و مقررات را می‌پذیرم',
@@ -71,14 +64,12 @@ class PaymentConfirmForm(forms.Form):
         if not self.cleaned_data['terms_accepted']:
             raise forms.ValidationError('پذیرش قوانین و مقررات الزامی است')
         return self.cleaned_data['terms_accepted']
-
 class PaymentFilterForm(forms.Form):
+    """فرم فیلتر پرداخت‌ها"""
     status = forms.ChoiceField(
         choices=[('', 'همه')] + list(PAYMENT_STATUS.items()),
         required=False,
-        widget=forms.Select(attrs={
-            'class': 'form-select'
-        })
+        widget=forms.Select(attrs={'class': 'form-select'})
     )
     
     min_amount = forms.IntegerField(
@@ -112,8 +103,8 @@ class PaymentFilterForm(forms.Form):
             'type': 'date'
         })
     )
-
 class RefundRequestForm(forms.ModelForm):
+    """فرم درخواست استرداد وجه"""
     class Meta:
         model = RefundRequest
         fields = ['reason', 'bank_account']
@@ -121,18 +112,13 @@ class RefundRequestForm(forms.ModelForm):
             'reason': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 3,
-                'placeholder': 'دلیل درخواست استرداد را وارد کنید'
+                'placeholder': 'دلیل درخواست استرداد را شرح دهید'
             }),
             'bank_account': forms.TextInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'شماره شبا را وارد کنید'
+                'placeholder':  'شماره شبا را وارد کنید'
             })
         }
-
-    def clean_reason(self):
-        reason = self.cleaned_data['reason']
-        validate_refund_reason(reason)
-        return reason
 
     def clean_bank_account(self):
         bank_account = self.cleaned_data['bank_account']

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from rest_framework import serializers
 from payments.models import Payment
 from properties.models import Property
@@ -70,3 +72,4 @@ class PaymentHistorySerializer(serializers.ModelSerializer):
             'id', 'total_amount', 'payment_status',
             'payment_date', 'bank_tracking_code'
         ]
+

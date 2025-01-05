@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 
 # properties/api/urls.py
 from django.urls import path
@@ -20,3 +22,4 @@ urlpatterns = [
          views.CheckAvailabilityView.as_view(), 
          name='check_availability'),
 ]
+

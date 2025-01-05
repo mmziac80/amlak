@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django_filters import rest_framework as filters
 from django.db.models import Q
 from .models import Payment, Transaction, RefundRequest
@@ -89,3 +91,4 @@ class RefundRequestFilter(filters.FilterSet):
             'processed_after', 'processed_before',
             'min_amount', 'max_amount'
         ]
+

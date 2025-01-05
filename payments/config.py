@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.conf import settings
 
 # تنظیمات درگاه زرین‌پال
@@ -164,3 +166,4 @@ RATE_LIMIT_SETTINGS = {
     'PAYMENT_REFUND_RATE': '5/day',
     'REPORT_RATE': '100/day',
 }
+

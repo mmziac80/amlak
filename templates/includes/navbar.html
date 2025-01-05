@@ -1,72 +1,78 @@
 <nav class="navbar navbar-expand-lg navbar-dark glass-card sticky-top">
     <div class="container">
-        <a class="navbar-brand glow-text" href="{% url 'properties:home' %}">
+        <a class="navbar-brand glow-text" href="{% url 'core:home' %}">
             <i class="fas fa-building"></i> املاک هوشمند
         </a>
-        
+
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
-        
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav me-auto">
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'sale_properties' %}active{% endif %}" 
-                       href="{% url 'properties:sale_properties' %}">
-                        <i class="fas fa-home glow-icon"></i> خرید
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-home glow-icon"></i> املاک
                     </a>
+                    <ul class="dropdown-menu glass-card">
+                        <li><a class="dropdown-item" href="{% url 'properties:list' %}">همه املاک</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'properties:sale_properties' %}">
+                            <i class="fas fa-home glow-icon"></i> خرید
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'properties:rent_properties' %}">
+                            <i class="fas fa-key glow-icon"></i> اجاره
+                        </a></li>
+                        <li><a class="dropdown-item" href="{% url 'properties:daily_list' %}">
+                            <i class="fas fa-bed glow-icon"></i> اقامت روزانه
+                        </a></li>
+                    </ul>
                 </li>
+                <!-- اضافه کردن لینک جستجوی مکانی -->
                 <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'rent_properties' %}active{% endif %}"
-                       href="{% url 'properties:rent_properties' %}">
-                        <i class="fas fa-key glow-icon"></i> اجاره
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link {% if request.resolver_match.url_name == 'daily_properties' %}active{% endif %}"
-                       href="{% url 'properties:daily_properties' %}">
-                        <i class="fas fa-bed glow-icon"></i> اقامت روزانه
+                    <a class="nav-link" href="{% url 'property:location-filter' %}">
+                        <i class="fas fa-map-marker-alt"></i> جستجوی مکانی
                     </a>
                 </li>
             </ul>
-            
-            <div class="d-flex align-items-center gap-3">
-                {% if user.is_authenticated %}
-                    <div class="dropdown">
-                        <button class="btn btn-outline-glow dropdown-toggle" data-bs-toggle="dropdown">
-                            <i class="fas fa-user"></i> {{ user.username }}
-                        </button>
-                        <ul class="dropdown-menu glass-card dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="{% url 'payments:payment_history' %}">
-                                    <i class="fas fa-history glow-icon"></i> تاریخچه پرداخت‌ها
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="fas fa-heart glow-icon"></i> علاقه‌مندی‌ها
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="{% url 'logout' %}">
-                                    <i class="fas fa-sign-out-alt"></i> خروج
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                {% else %}
-                    <a href="{% url 'login' %}" class="btn btn-outline-glow">
-                        <i class="fas fa-sign-in-alt"></i> ورود
-                    </a>
-                    <a href="{% url 'register' %}" class="btn btn-glow">
-                        <i class="fas fa-user-plus"></i> ثبت‌نام
-                    </a>
-                {% endif %}
-            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            {% if user.is_authenticated %}
+                <div class="dropdown">
+                    <button class="btn btn-outline-glow dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-user"></i> {{ user.username }}
+                    </button>
+                    <ul class="dropdown-menu glass-card dropdown-menu-end">
+                        <li>
+                            <a class="dropdown-item" href="{% url 'payments:history' %}">
+                                <i class="fas fa-history glow-icon"></i> تاریخچه پرداخت‌ها
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="#">
+                                <i class="fas fa-heart glow-icon"></i> علاقه‌مندی‌ها
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                <i class="fas fa-sign-out-alt"></i> خروج
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="{% url 'login' %}" class="btn btn-outline-glow">
+                    <i class="fas fa-sign-in-alt"></i> ورود
+                </a>
+                <a href="{% url 'core:signup' %}" class="btn btn-glow">
+                    <i class="fas fa-user-plus"></i> ثبت‌نام
+                </a>
+            {% endif %}
         </div>
     </div>
 </nav>
+
 
 <style>
     .navbar {

@@ -1,18 +1,26 @@
+# -*- coding: utf-8 -*-
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 from django.utils.translation import gettext_lazy as _
-from .models import User, UserActivity
+from .models import User, UserActivity, UserProfile, UserNotification, UserDevice
+
+class UserProfileInline(admin.StackedInline):
+    model = UserProfile
+    can_delete = False
+    verbose_name = 'پروفایل'
+    verbose_name_plural = 'پروفایل'
 
 @admin.register(User)
 class CustomUserAdmin(UserAdmin):
+    inlines = (UserProfileInline,)
     list_display = (
-        'username', 'get_full_name_display', 'phone', 
-        'email', 'is_verified', 'get_status_display', 
+        'username', 'get_full_name_display', 'phone',
+        'email', 'get_status_display',
         'date_joined'
     )
     list_filter = (
-        'is_verified', 'is_active', 'is_staff',
+        'is_active', 'is_staff',
         'is_superuser', 'date_joined'
     )
     search_fields = (
@@ -23,20 +31,21 @@ class CustomUserAdmin(UserAdmin):
 
     fieldsets = (
         (None, {'fields': ('username', 'password')}),
-        (_('اطلاعات شخصی'), {
+        ('اطلاعات شخصی', {
             'fields': (
                 'first_name', 'last_name', 'email',
                 'phone', 'national_code', 'birth_date',
-                'avatar', 'address'
+                'avatar', 'bank_account',
+                'identity_verified', 'identity_document'
             )
         }),
-        (_('وضعیت و دسترسی‌ها'), {
+        ('مجوزها و دسترسی‌ها', {
             'fields': (
-                'is_active', 'is_verified', 'is_staff',
+                'is_active', 'is_phone_verified', 'is_staff',
                 'is_superuser', 'groups', 'user_permissions'
             )
         }),
-        (_('تاریخ‌های مهم'), {
+        ('تاریخ‌های مهم', {
             'fields': ('last_login', 'date_joined')
         }),
     )
@@ -59,7 +68,7 @@ class CustomUserAdmin(UserAdmin):
         if obj.is_active:
             if obj.is_staff:
                 return format_html('<span class="badge bg-success">مدیر</span>')
-            elif obj.is_verified:
+            elif obj.is_phone_verified:
                 return format_html('<span class="badge bg-primary">فعال</span>')
             else:
                 return format_html('<span class="badge bg-warning">در انتظار تایید</span>')
@@ -91,3 +100,26 @@ class UserActivityAdmin(admin.ModelAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+@admin.register(UserNotification)
+class UserNotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'notification_type', 'title', 'is_read', 'created_at')
+    list_filter = ('notification_type', 'is_read', 'created_at')
+    search_fields = ('user__username', 'title', 'message')
+    ordering = ('-created_at',)
+    
+    class Meta:
+        verbose_name = 'اعلان'
+        verbose_name_plural = 'اعلان‌ها'
+
+@admin.register(UserDevice)
+class UserDeviceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'device_type', 'is_active', 'last_login')
+    list_filter = ('device_type', 'is_active')
+    search_fields = ('user__username', 'device_id')
+    ordering = ('-last_login',)
+    
+    class Meta:
+        verbose_name = 'دستگاه'
+        verbose_name_plural = 'دستگاه‌ها'
+

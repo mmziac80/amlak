@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
@@ -37,3 +39,4 @@ urlpatterns = [
 handler403 = 'settlements.views.settlement_403_error'
 handler404 = 'settlements.views.settlement_404_error'
 handler500 = 'settlements.views.settlement_500_error'
+

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -123,3 +125,4 @@ def validate_mobile_number(value):
         raise ValidationError(_('شماره موبایل باید 11 رقم باشد'))
     if not value.isdigit():
         raise ValidationError(_('شماره موبایل باید فقط شامل اعداد باشد'))
+

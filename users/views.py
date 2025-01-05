@@ -1,135 +1,174 @@
-from django.shortcuts import render, get_object_or_404, redirect
+# -*- coding: utf-8 -*-
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.views.generic import ListView, DetailView, UpdateView
+from django.contrib import messages
 from django.urls import reverse_lazy
-from django.http import JsonResponse
-from django.db.models import Q
-from .models import Property, PropertyImage
-from .forms import PropertyForm, PropertySearchForm
+from django.utils.translation import gettext_lazy as _
+from django.views import View
+from django.utils import timezone
+from datetime import timedelta
 
-class PropertyListView(ListView):
-    model = Property
-    template_name = 'properties/property_list.html'
-    context_object_name = 'properties'
-    paginate_by = 12
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
-    def get_queryset(self):
-        queryset = Property.objects.all().order_by('-created_at')
-        query = self.request.GET.get('q')
+from .models import User, UserProfile, UserNotification, UserDevice
+from .forms import (
+    PhoneLoginForm, 
+    OTPVerifyForm,
+    UserProfileForm,
+    IdentityVerificationForm
+)
+from .utils import generate_otp, send_sms, is_otp_valid
+from .serializers import UserRegistrationSerializer, VerifyOTPSerializer
+class PhoneLoginView(View):
+    """ورود با شماره تلفن همراه"""
+    template_name = 'users/phone_login.html'
+    
+    def get(self, request):
+        if request.user.is_authenticated:
+            return redirect('users:profile')
+        form = PhoneLoginForm()
+        return render(request, self.template_name, {'form': form})
         
-        if query:
-            queryset = queryset.filter(
-                Q(title__icontains=query) |
-                Q(description__icontains=query) |
-                Q(address__icontains=query)
-            )
+    def post(self, request):
+        form = PhoneLoginForm(request.POST)
+        if form.is_valid():
+            phone = form.cleaned_data['phone']
+            user, created = User.objects.get_or_create(phone=phone)
             
-        return queryset
+            otp = generate_otp()
+            user.otp = otp
+            user.otp_create_time = timezone.now()
+            user.save()
+            
+            send_sms(phone, f'کد تایید شما: {otp}')
+            request.session['auth_phone'] = phone
+            
+            messages.success(request, 'کد تایید ارسال شد')
+            return redirect('users:verify-otp')
+            
+        return render(request, self.template_name, {'form': form})
 
-class PropertyDetailView(DetailView):
-    model = Property
-    template_name = 'properties/property_detail.html'
-    context_object_name = 'property'
+class VerifyOTPView(View):
+    """تایید کد OTP"""
+    template_name = 'users/verify_otp.html'
+    
+    def get(self, request):
+        if 'auth_phone' not in request.session:
+            messages.error(request, 'لطفا شماره موبایل خود را وارد کنید')
+            return redirect('users:phone-login')
+        form = OTPVerifyForm()
+        return render(request, self.template_name, {'form': form})
+
+    def post(self, request):
+        form = OTPVerifyForm(request.POST)
+        if form.is_valid():
+            phone = request.session.get('auth_phone')
+            user = User.objects.get(phone=phone)
+            otp = form.cleaned_data['otp']
+            
+            if is_otp_valid(user, otp):
+                user.is_phone_verified = True
+                user.save()
+                login(request, user)
+                del request.session['auth_phone']
+                messages.success(request, 'ورود موفق')
+                return redirect('users:profile')
+            else:
+                messages.error(request, 'کد وارد شده نامعتبر است')
+                
+        return render(request, self.template_name, {'form': form})
+
+class ProfileView(LoginRequiredMixin, DetailView):
+    """نمایش پروفایل کاربر"""
+    model = User
+    template_name = 'users/profile.html'
+    context_object_name = 'user'
+
+    def get_object(self):
+        return self.request.user
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['similar_properties'] = Property.objects.filter(
-            property_type=self.object.property_type,
-            district=self.object.district
-        ).exclude(id=self.object.id)[:3]
+        context['notifications'] = self.request.user.notifications.filter(is_read=False)[:5]
         return context
 
-class PropertyCreateView(LoginRequiredMixin, CreateView):
-    model = Property
-    form_class = PropertyForm
-    template_name = 'properties/property_form.html'
-    success_url = reverse_lazy('property_list')
+class ProfileUpdateView(LoginRequiredMixin, UpdateView):
+    """ویرایش پروفایل کاربر"""
+    model = User
+    form_class = UserProfileForm
+    template_name = 'users/profile_update.html'
+    success_url = reverse_lazy('users:profile')
+
+    def get_object(self):
+        return self.request.user
 
     def form_valid(self, form):
-        form.instance.owner = self.request.user
-        response = super().form_valid(form)
-        
-        # Handle multiple images
-        images = self.request.FILES.getlist('images')
-        for image in images:
-            PropertyImage.objects.create(
-                property=self.object,
-                image=image,
-                is_main=False
-            )
-        return response
-
-class PropertyUpdateView(LoginRequiredMixin, UpdateView):
-    model = Property
-    form_class = PropertyForm
-    template_name = 'properties/property_form.html'
-    success_url = reverse_lazy('property_list')
-
-    def get_queryset(self):
-        return Property.objects.filter(owner=self.request.user)
-
-class PropertyDeleteView(LoginRequiredMixin, DeleteView):
-    model = Property
-    success_url = reverse_lazy('property_list')
-    template_name = 'properties/property_confirm_delete.html'
-
-    def get_queryset(self):
-        return Property.objects.filter(owner=self.request.user)
+        messages.success(self.request, 'پروفایل شما با موفقیت بروزرسانی شد')
+        return super().form_valid(form)
 
 @login_required
-def add_to_favorites(request, pk):
-    property = get_object_or_404(Property, pk=pk)
-    if property in request.user.profile.favorites.all():
-        request.user.profile.favorites.remove(property)
-        added = False
-    else:
-        request.user.profile.favorites.add(property)
-        added = True
-    return JsonResponse({'added': added})
-
-@login_required
-def my_properties(request):
-    properties = Property.objects.filter(owner=request.user)
-    return render(request, 'properties/my_properties.html', {
-        'properties': properties
-    })
-
-@login_required
-def favorite_properties(request):
-    properties = request.user.profile.favorites.all()
-    return render(request, 'properties/favorite_properties.html', {
-        'properties': properties
-    })
-
-def search_properties(request):
-    form = PropertySearchForm(request.GET)
-    properties = Property.objects.all()
-
-    if form.is_valid():
-        if form.cleaned_data.get('property_type'):
-            properties = properties.filter(property_type=form.cleaned_data['property_type'])
-        if form.cleaned_data.get('district'):
-            properties = properties.filter(district=form.cleaned_data['district'])
-        if form.cleaned_data.get('min_price'):
-            properties = properties.filter(price__gte=form.cleaned_data['min_price'])
-        if form.cleaned_data.get('max_price'):
-            properties = properties.filter(price__lte=form.cleaned_data['max_price'])
-        if form.cleaned_data.get('min_area'):
-            properties = properties.filter(area__gte=form.cleaned_data['min_area'])
-        if form.cleaned_data.get('max_area'):
-            properties = properties.filter(area__lte=form.cleaned_data['max_area'])
-
-    return render(request, 'properties/search_results.html', {
-        'form': form,
-        'properties': properties
-    })
-
-def property_compare(request):
+def verify_identity(request):
+    """احراز هویت کاربر"""
     if request.method == 'POST':
-        property_ids = request.POST.getlist('property_ids')
-        properties = Property.objects.filter(id__in=property_ids)
-        return render(request, 'properties/compare.html', {
-            'properties': properties
+        form = IdentityVerificationForm(request.POST, request.FILES)
+        if form.is_valid():
+            request.user.identity_document = form.cleaned_data['identity_document']
+            request.user.save()
+            messages.success(request, 'مدارک شما با موفقیت ثبت شد')
+            return redirect('users:profile')
+    else:
+        form = IdentityVerificationForm()
+    
+    return render(request, 'users/verify_identity.html', {'form': form})
+
+@login_required
+def notifications_list(request):
+    """لیست اعلان‌های کاربر"""
+    notifications = request.user.notifications.all()
+    return render(request, 'users/notifications.html', {
+        'notifications': notifications
+    })
+
+@login_required
+def notification_read(request, pk):
+    """علامت‌گذاری اعلان به عنوان خوانده شده"""
+    notification = get_object_or_404(UserNotification, pk=pk, user=request.user)
+    notification.mark_as_read()
+    return redirect('users:notifications')
+
+@api_view(['POST'])
+def register_api(request):
+    """API ثبت‌نام کاربر"""
+    serializer = UserRegistrationSerializer(data=request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response({
+            'message': 'کد تایید ارسال شد',
+            'user_id': user.id
         })
-    return redirect('property_list')
+    return Response(serializer.errors, status=400)
+
+@api_view(['POST'])
+def verify_otp_api(request):
+    """API تایید کد OTP"""
+    serializer = VerifyOTPSerializer(data=request.data)
+    if serializer.is_valid():
+        phone = serializer.validated_data['phone']
+        otp = serializer.validated_data['otp']
+        user = get_object_or_404(User, phone=phone)
+        
+        if is_otp_valid(user, otp):
+            return Response({'message': 'تایید شد'})
+        return Response({'error': 'کد نامعتبر است'}, status=400)
+    return Response(serializer.errors, status=400)
+
+def logout_view(request):
+    """خروج کاربر از حساب کاربری"""
+    logout(request)
+    messages.success(request, 'با موفقیت خارج شدید')
+    return redirect('users:phone-login')

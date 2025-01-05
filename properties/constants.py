@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 # نوع ملک
 PROPERTY_TYPE_CHOICES = [
     ('apartment', 'آپارتمان'),
@@ -104,3 +106,4 @@ SORT_CHOICES = [
     ('date_desc', 'جدیدترین'),
     ('date_asc', 'قدیمی‌ترین'),
 ]
+

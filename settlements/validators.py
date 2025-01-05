@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.utils import timezone
@@ -70,3 +72,4 @@ def validate_owner_balance(user, amount):
             _('موجودی کافی نیست'),
             code='insufficient_balance'
         )
+

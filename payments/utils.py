@@ -1,36 +1,74 @@
+# -*- coding: utf-8 -*-
 import logging
 import requests
 import json
+import uuid
 from django.conf import settings
 from django.utils import timezone
 from django.core.cache import cache
 from django.db.models import Sum
-from kavenegar import KavenegarAPI
 
 from .models import Payment, Transaction, RefundRequest
-from .constants import (
-    PAYMENT_STATUS,
-    ZARINPAL,
-    IDPAY,
-    NEXTPAY,
-    ERROR_CODES,
-    SMS_TEMPLATES
-)
+from .constants import PAYMENT_STATUS
 from .exceptions import PaymentGatewayError, PaymentVerificationError
 
 logger = logging.getLogger(__name__)
 
+# کلاس‌های مربوط به SMS
+class SMSProvider:
+    """کلاس پایه برای ارائه‌دهندگان SMS"""
+    def send(self, phone, message):
+        raise NotImplementedError
+
+class FakeSMSProvider(SMSProvider):
+    """ارائه‌دهنده تستی SMS"""
+    def send(self, phone, message):
+        print(f"[FAKE SMS] To: {phone}")
+        print(f"Message: {message}")
+        return True
+
+class KavenegarSMSProvider(SMSProvider):
+    """ارائه‌دهنده کاوه‌نگار - برای استفاده در آینده"""
+    def send(self, phone, message):
+        try:
+            # TODO: پیاده‌سازی در آینده
+            print(f"[KAVENEGAR] Would send to {phone}: {message}")
+            return True
+        except Exception as e:
+            logger.error(f"Kavenegar SMS failed: {str(e)}")
+            return False
+
+def get_sms_provider():
+    """برگرداندن ارائه‌دهنده SMS بر اساس تنظیمات"""
+    if settings.SMS_SETTINGS.get('IS_FAKE', True):
+        return FakeSMSProvider()
+    return KavenegarSMSProvider()
+
+def send_sms(phone, message):
+    """تابع اصلی ارسال پیامک"""
+    try:
+        provider = get_sms_provider()
+        return provider.send(phone, message)
+    except Exception as e:
+        logger.error(f"SMS sending failed: {str(e)}")
+        return False
+
+# توابع مربوط به پرداخت
 def init_payment(payment):
     """شروع فرآیند پرداخت"""
     try:
-        if payment.gateway == 'zarinpal':
-            return init_zarinpal_payment(payment)
-        elif payment.gateway == 'idpay':
-            return init_idpay_payment(payment)
-        elif payment.gateway == 'nextpay':
-            return init_nextpay_payment(payment)
-        else:
-            raise PaymentGatewayError('درگاه پرداخت نامعتبر است')
+        response = requests.post(settings.PAYMENT_GATEWAY['REQUEST_URL'], {
+            'merchant_id': settings.PAYMENT_GATEWAY['MERCHANT_ID'],
+            'amount': payment.amount,
+            'callback_url': settings.PAYMENT_GATEWAY['CALLBACK_URL'],
+            'description': f'پرداخت شماره {payment.id}'
+        })
+        
+        result = response.json()
+        if result['status'] == 100:
+            return {'success': True, 'token': result['token']}
+            
+        return {'success': False, 'error': result['message']}
             
     except Exception as e:
         logger.error(f"Payment initialization failed: {str(e)}")
@@ -39,33 +77,23 @@ def init_payment(payment):
 def verify_payment(payment, authority):
     """تایید پرداخت"""
     try:
-        if payment.gateway == 'zarinpal':
-            return verify_zarinpal_payment(payment, authority)
-        elif payment.gateway == 'idpay':
-            return verify_idpay_payment(payment, authority)
-        elif payment.gateway == 'nextpay':
-            return verify_nextpay_payment(payment, authority)
-        else:
-            raise PaymentGatewayError('درگاه پرداخت نامعتبر است')
+        response = requests.post(settings.PAYMENT_GATEWAY['VERIFY_URL'], {
+            'merchant_id': settings.PAYMENT_GATEWAY['MERCHANT_ID'],
+            'authority': authority,
+            'amount': payment.amount
+        })
+        
+        result = response.json()
+        if result['status'] == 100:
+            return {'success': True, 'ref_id': result['ref_id']}
             
+        return {'success': False, 'error': result['message']}
+        
     except Exception as e:
         logger.error(f"Payment verification failed: {str(e)}")
         return {'success': False, 'error': str(e)}
 
-def send_payment_sms(mobile, message):
-    """ارسال پیامک پرداخت"""
-    try:
-        api = KavenegarAPI(settings.KAVENEGAR_API_KEY)
-        params = {
-            'receptor': mobile,
-            'message': message
-        }
-        response = api.sms_send(params)
-        return {'success': True, 'response': response}
-    except Exception as e:
-        logger.error(f"SMS sending failed: {str(e)}")
-        return {'success': False, 'error': str(e)}
-
+# سایر توابع کمکی
 def format_amount(amount):
     """فرمت‌بندی مبلغ"""
     return "{:,}".format(amount)
@@ -91,12 +119,13 @@ def get_payment_stats(user=None, start_date=None, end_date=None):
     
     stats['failed_count'] = stats['total_count'] - stats['successful_count']
     stats['success_rate'] = (
-        (stats['successful_count'] / stats['total_count']) * 100 
+        (stats['successful_count'] / stats['total_count']) * 100
         if stats['total_count'] > 0 else 0
     )
     
     return stats
 
+# توابع مربوط به تراکنش‌ها
 def create_payment_transaction(payment, **kwargs):
     """ایجاد تراکنش جدید"""
     return Transaction.objects.create(
@@ -113,6 +142,7 @@ def expire_pending_payments():
         created_at__lt=expiry_time
     ).update(status=PAYMENT_STATUS['EXPIRED'])
 
+# توابع مربوط به کش
 def cache_payment_status(payment_id, status, timeout=300):
     """ذخیره وضعیت پرداخت در کش"""
     cache_key = f'payment_status_{payment_id}'
@@ -123,10 +153,10 @@ def get_cached_payment_status(payment_id):
     cache_key = f'payment_status_{payment_id}'
     return cache.get(cache_key)
 
+# توابع مربوط به استرداد و کمیسیون
 def process_refund_request(refund_request):
     """پردازش درخواست استرداد"""
     try:
-        # اینجا کد مربوط به API بانک برای استرداد وجه قرار می‌گیرد
         refund_request.status = 'approved'
         refund_request.processed_at = timezone.now()
         refund_request.save()
@@ -147,5 +177,16 @@ def calculate_commission(amount, rate=0.1):
 
 def generate_tracking_code():
     """تولید کد پیگیری یکتا"""
-    import uuid
     return str(uuid.uuid4().hex)[:10].upper()
+
+def call_bank_refund_api(payment, amount):
+    """فراخوانی API بانک برای استرداد وجه"""
+    try:
+        # TODO: پیاده‌سازی اتصال به API بانک
+        print(f"Calling bank refund API for payment {payment.id}, amount: {amount}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Bank refund API call failed: {str(e)}")
+        return False
+
