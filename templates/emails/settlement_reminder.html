@@ -1,0 +1,79 @@
+{% extends "emails/base.html" %}
+
+{% block title %}یادآوری تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="email-container" style="direction: rtl; font-family: Vazir, Tahoma; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <img src="{{ site_logo }}" alt="لوگو" style="max-width: 150px;">
+        <h2 style="color: #f39c12; margin-top: 20px;">یادآوری تسویه حساب</h2>
+        <p style="color: #7f8c8d;">{{ reminder_date|date:"Y/m/d" }}</p>
+    </div>
+
+    <div class="reminder-details" style="background: #fff8e1; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div class="message-box" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #f39c12; margin-top: 0;">{{ user.get_full_name }} عزیز</h4>
+            <p style="color: #2c3e50;">شما {{ pending_count }} تسویه حساب در انتظار دارید که نیاز به رسیدگی دارند.</p>
+            <p style="color: #7f8c8d; font-size: 14px;">لطفاً در اسرع وقت نسبت به بررسی و تعیین تکلیف آنها اقدام فرمایید.</p>
+        </div>
+
+        <div class="settlements-list">
+            {% for settlement in pending_settlements %}
+            <div class="settlement-item" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #7f8c8d;">کد پیگیری:</span>
+                    <span style="color: #2980b9; font-family: monospace;">{{ settlement.tracking_code }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #7f8c8d;">مبلغ:</span>
+                    <span style="color: #2c3e50; font-weight: bold;">{{ settlement.amount|intcomma }} تومان</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="color: #7f8c8d;">تاریخ درخواست:</span>
+                    <span style="color: #2c3e50;">{{ settlement.request_date|date:"Y/m/d" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #7f8c8d;">مدت انتظار:</span>
+                    <span style="color: #e74c3c;">{{ settlement.waiting_days }} روز</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="statistics" style="background: white; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <h4 style="color: #2980b9; margin-top: 0;">آمار تسویه‌های معوق</h4>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px;">
+                <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <span style="color: #7f8c8d;">میانگین مبلغ</span>
+                    <p style="color: #2c3e50; font-weight: bold; margin: 5px 0;">{{ average_amount|intcomma }} تومان</p>
+                </div>
+                <div style="text-align: center; padding: 10px; background: #f8f9fa; border-radius: 5px;">
+                    <span style="color: #7f8c8d;">مجموع مبالغ</span>
+                    <p style="color: #2c3e50; font-weight: bold; margin: 5px 0;">{{ total_amount|intcomma }} تومان</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="action-required" style="background: #fdf2e9; border-right: 4px solid #e67e22; padding: 15px; border-radius: 4px;">
+            <p style="margin: 0; color: #d35400;">
+                توجه: عدم رسیدگی به تسویه‌های معوق بیش از {{ max_waiting_days }} روز، ممکن است منجر به محدودیت در سیستم شود.
+            </p>
+        </div>
+    </div>
+
+    <div class="actions" style="text-align: center; margin-top: 30px;">
+        <a href="{{ settlements_url }}" class="btn" style="background-color: #e67e22; color: white; text-decoration: none; padding: 12px 25px; border-radius: 5px; display: inline-block;">
+            مدیریت تسویه‌ها
+        </a>
+    </div>
+
+    <div class="support-info" style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d;">در صورت نیاز به راهنمایی با پشتیبانی تماس بگیرید</p>
+        <div class="support-contacts" style="margin-top: 15px;">
+            <p style="margin: 5px 0; color: #7f8c8d;">تلفن پشتیبانی: {{ SUPPORT_PHONE }}</p>
+            <p style="margin: 5px 0; color: #7f8c8d;">ایمیل پشتیبانی: {{ SUPPORT_EMAIL }}</p>
+            <p style="margin: 5px 0; color: #7f8c8d;">ساعات پاسخگویی: همه روزه از ۸ صبح تا ۸ شب</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,43 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body text-center">
+                    {% if payment.status == 'success' %}
+                        <div class="mb-4">
+                            <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="card-title text-success mb-4">پرداخت با موفقیت انجام شد</h4>
+                        <div class="payment-details">
+                            <p>مبلغ پرداختی: {{ payment.amount|intcomma }} تومان</p>
+                            <p>کد پیگیری: {{ payment.tracking_code }}</p>
+                            <p>تاریخ پرداخت: {{ payment.created_at|date:"Y/m/d H:i" }}</p>
+                        </div>
+                        <div class="mt-4">
+                            <a href="{% url 'properties:daily_property_detail' payment.booking.property.id %}" class="btn btn-primary">
+                                بازگشت به صفحه اقامتگاه
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="mb-4">
+                            <i class="bi bi-x-circle text-danger" style="font-size: 4rem;"></i>
+                        </div>
+                        <h4 class="card-title text-danger mb-4">پرداخت ناموفق</h4>
+                        <p>متاسفانه پرداخت شما با مشکل مواجه شد.</p>
+                        <div class="mt-4">
+                            <a href="{% url 'payments:payment_init' payment.booking.id %}" class="btn btn-primary">
+                                تلاش مجدد
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

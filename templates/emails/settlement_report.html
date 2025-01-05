@@ -1,0 +1,84 @@
+{% extends "emails/base.html" %}
+
+{% block title %}گزارش تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="email-container" style="direction: rtl; font-family: Vazir, Tahoma; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <img src="{{ site_logo }}" alt="لوگو" style="max-width: 150px;">
+        <h2 style="color: #2c3e50; margin-top: 20px;">گزارش تسویه حساب</h2>
+        <p style="color: #7f8c8d;">{{ report_date|date:"Y/m/d" }}</p>
+    </div>
+    
+    <div class="report-details" style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <h3 style="color: #2980b9; margin-top: 0;">خلاصه گزارش</h3>
+        
+        <div class="summary-box" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">تعداد کل تسویه‌ها:</span>
+                <span class="value" style="color: #2c3e50; font-weight: bold;">{{ total_count }}</span>
+            </div>
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">تسویه‌های موفق:</span>
+                <span class="value" style="color: #27ae60;">{{ successful_count }}</span>
+            </div>
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">تسویه‌های ناموفق:</span>
+                <span class="value" style="color: #e74c3c;">{{ failed_count }}</span>
+            </div>
+            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">تسویه‌های در انتظار:</span>
+                <span class="value" style="color: #f39c12;">{{ pending_count }}</span>
+            </div>
+            <div class="summary-row" style="display: flex; justify-content: space-between;">
+                <span class="label" style="color: #7f8c8d;">مجموع مبالغ تسویه شده:</span>
+                <span class="value" style="color: #2c3e50; font-weight: bold;">{{ total_amount|intcomma }} تومان</span>
+            </div>
+        </div>
+
+        <div class="chart-section" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0;">نمودار وضعیت تسویه‌ها</h4>
+            <div style="text-align: center;">
+                <img src="{{ chart_url }}" alt="نمودار تسویه‌ها" style="max-width: 100%; height: auto;">
+            </div>
+        </div>
+
+        <div class="transactions-list" style="margin-top: 20px;">
+            <h4 style="color: #2980b9;">تراکنش‌های اخیر</h4>
+            {% for transaction in recent_transactions %}
+            <div class="transaction-item" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 10px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="color: #7f8c8d;">کد پیگیری:</span>
+                    <span style="color: #2980b9; font-family: monospace;">{{ transaction.tracking_code }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="color: #7f8c8d;">مبلغ:</span>
+                    <span style="color: #2c3e50;">{{ transaction.amount|intcomma }} تومان</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                    <span style="color: #7f8c8d;">وضعیت:</span>
+                    <span style="color: {% if transaction.status == 'completed' %}#27ae60{% elif transaction.status == 'failed' %}#e74c3c{% else %}#f39c12{% endif %};">
+                        {{ transaction.get_status_display }}
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #7f8c8d;">تاریخ:</span>
+                    <span style="color: #2c3e50;">{{ transaction.date|date:"Y/m/d H:i" }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="actions" style="text-align: center; margin-top: 30px;">
+        <a href="{{ dashboard_url }}" class="btn" style="background-color: #3498db; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px;">
+            مشاهده گزارش کامل
+        </a>
+    </div>
+
+    <div class="footer-note" style="margin-top: 30px; text-align: center; color: #7f8c8d; font-size: 14px;">
+        <p>این گزارش به صورت خودکار تولید شده است.</p>
+        <p>جهت دریافت اطلاعات بیشتر به پنل مدیریت مراجعه نمایید.</p>
+    </div>
+</div>
+{% endblock %}

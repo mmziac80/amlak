@@ -1,0 +1,22 @@
+@import '../shared/glass-effects.css';
+
+.property-detail {
+    composes: glass-effect;
+    padding: 30px;
+}
+
+.property-detail__gallery {
+    margin-bottom: 30px;
+}
+
+.property-detail__info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.property-detail__features {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}

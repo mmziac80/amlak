@@ -1,0 +1,100 @@
+{% extends "emails/base.html" %}
+
+{% block title %}اطلاع‌رسانی وضعیت تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="email-container" style="direction: rtl; font-family: Vazir, Tahoma; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <img src="{{ site_logo }}" alt="لوگو" style="max-width: 150px;">
+        <h2 style="color: #2c3e50; margin-top: 20px;">وضعیت تسویه حساب</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">{{ notification_date|date:"Y/m/d H:i" }}</p>
+    </div>
+    
+    <div class="notification-details" style="background: #f8f9fa; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <div class="status-box" style="background: {% if status == 'completed' %}#e8f6f3{% elif status == 'failed' %}#fdeaea{% else %}#fff8e1{% endif %}; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h3 style="color: {% if status == 'completed' %}#27ae60{% elif status == 'failed' %}#e74c3c{% else %}#f39c12{% endif %}; margin-top: 0;">
+                {{ status_message }}
+            </h3>
+            <p style="color: #2c3e50;">{{ user.get_full_name }} عزیز</p>
+            <p style="color: #2c3e50;">{{ notification_message }}</p>
+        </div>
+
+        <div class="details-box" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">شماره درخواست:</span>
+                <span class="value" style="color: #2980b9; font-family: monospace;">{{ request_id }}</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">مبلغ تسویه:</span>
+                <span class="value" style="color: #2c3e50; font-weight: bold;">{{ amount|intcomma }} تومان</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">تاریخ درخواست:</span>
+                <span class="value" style="color: #2c3e50;">{{ request_date|date:"Y/m/d H:i" }}</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">شماره حساب مقصد:</span>
+                <span class="value" style="color: #2c3e50; font-family: monospace;">{{ bank_account }}</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between;">
+                <span class="label" style="color: #7f8c8d;">وضعیت:</span>
+                <span class="value" style="color: {% if status == 'completed' %}#27ae60{% elif status == 'failed' %}#e74c3c{% else %}#f39c12{% endif %};">
+                    {{ status_display }}
+                </span>
+            </div>
+        </div>
+
+        {% if bank_reference %}
+        <div class="bank-info" style="background: #e8f6f3; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #16a085; margin-top: 0;">اطلاعات تراکنش بانکی</h4>
+            <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                <span style="color: #7f8c8d;">شماره پیگیری بانکی:</span>
+                <span style="color: #2c3e50; font-family: monospace;">{{ bank_reference }}</span>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if next_steps %}
+        <div class="next-steps" style="background: #f7f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0;">مراحل بعدی:</h4>
+            <ul style="color: #34495e; margin: 10px 0;">
+                {% for step in next_steps %}
+                <li style="margin-bottom: 8px;">{{ step }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% if error_details %}
+        <div class="error-details" style="background: #fdeaea; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #c0392b; margin-top: 0;">جزئیات خطا:</h4>
+            <p style="color: #e74c3c; margin: 10px 0;">{{ error_details }}</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="actions" style="text-align: center; margin-top: 30px;">
+        <a href="{{ tracking_url }}" class="btn" style="background-color: #3498db; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: inline-block; margin-bottom: 10px;">
+            پیگیری وضعیت تسویه
+        </a>
+        {% if support_required %}
+        <a href="{{ support_url }}" class="btn" style="background-color: #e67e22; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; display: inline-block; margin-right: 10px;">
+            تماس با پشتیبانی
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="support-info" style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d;">در صورت نیاز به راهنمایی با پشتیبانی تماس بگیرید</p>
+        <div class="support-contacts" style="margin-top: 15px;">
+            <p style="margin: 5px 0; color: #7f8c8d;">تلفن پشتیبانی: {{ SUPPORT_PHONE }}</p>
+            <p style="margin: 5px 0; color: #7f8c8d;">ایمیل پشتیبانی: {{ SUPPORT_EMAIL }}</p>
+        </div>
+        <div class="social-links" style="margin-top: 20px;">
+            <a href="{{ SOCIAL_INSTAGRAM }}" style="color: #e1306c; margin: 0 10px;">Instagram</a>
+            <a href="{{ SOCIAL_TELEGRAM }}" style="color: #0088cc; margin: 0 10px;">Telegram</a>
+            <a href="{{ SOCIAL_TWITTER }}" style="color: #1da1f2; margin: 0 10px;">Twitter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

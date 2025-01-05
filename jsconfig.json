@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+      "target": "es2015",
+      "module": "esnext",
+      "baseUrl": "./",
+      "paths": {
+        "@/*": ["resources/js/*"]
+      }
+    },
+    "include": ["resources/js/**/*"]
+  }
+  

@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="glass-card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">گفتگو با {{ receiver.get_full_name }}</h5>
+                    <span class="badge bg-success">آنلاین</span>
+                </div>
+                <div class="card-body chat-container" id="chat-messages">
+                    <!-- پیام‌ها اینجا لود می‌شوند -->
+                </div>
+                <div class="card-footer">
+                    <form id="chat-form" class="d-flex gap-2">
+                        <input type="text" class="form-control glass-input" 
+                               placeholder="پیام خود را بنویسید...">
+                        <button type="submit" class="btn btn-glow">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + 
+        '/ws/chat/{{ room_id }}/'
+    );
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        // اضافه کردن پیام به چت
+    };
+</script>
+{% endblock %}

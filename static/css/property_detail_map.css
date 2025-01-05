@@ -1,0 +1,187 @@
+/* استایل‌های اصلی نقشه */
+#location-map {
+    height: 400px;
+    width: 100%;
+    border-radius: 15px;
+    margin: 10px 0;
+    position: relative;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* کانتینر اصلی نقشه */
+.map-container {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+/* باکس جستجو */
+.map-search-box {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: flex;
+    gap: 5px;
+    width: 300px;
+}
+
+.map-search-box input {
+    flex-grow: 1;
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 8px 12px;
+}
+
+.map-search-box button {
+    width: 40px;
+    height: 38px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--ai-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+/* مارکرها و پاپ‌آپ‌ها */
+.property-marker {
+    background: none;
+    border: none;
+    animation: bounce 0.5s ease infinite alternate;
+}
+
+.property-marker i {
+    font-size: 24px;
+    color: var(--ai-primary);
+    text-shadow: 2px 2px 3px rgba(0,0,0,0.3);
+}
+
+.place-popup {
+    font-family: Vazir, sans-serif;
+    direction: rtl;
+    text-align: right;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+/* استایل‌های مارکر */
+.mapboxgl-marker {
+    cursor: move;
+}
+.mapboxgl-popup-content {
+    padding: 15px;
+    border-radius: 8px;
+    font-family: Vazir, sans-serif;
+}
+
+/* کنترل‌های نقشه */
+.map-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+    z-index: 1000;
+}
+
+.map-control-button {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border: none;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.map-control-button:hover {
+    background: var(--ai-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+.custom-map-control {
+    width: 36px;
+    height: 36px;
+    background: white;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    cursor: pointer;
+    margin: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+.custom-map-control:hover {
+    background: var(--ai-primary);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.custom-map-control i {
+    font-size: 16px;
+}
+/* استایل‌های باکس جستجو */
+.map-search {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    left: 10px;
+    z-index: 1000;
+}
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(5px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+
+/* انیمیشن‌ها */
+@keyframes bounce {
+    from { transform: translateY(0); }
+    to { transform: translateY(-5px); }
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* حالت تمام صفحه */
+.map-fullscreen {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* واکنش‌گرایی */
+@media (max-width: 768px) {
+    .map-search-box {
+        width: calc(100% - 20px);
+    }
+    
+    .map-control-button {
+        width: 32px;
+        height: 32px;
+    }
+}

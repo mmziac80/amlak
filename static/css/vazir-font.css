@@ -1,0 +1,16 @@
+@font-face {
+    font-family: 'Vazir';
+    src: url('../fonts/vazirmatn[wght].woff2') format('woff2-variations');
+    font-weight: 100 900;
+}
+
+/* استفاده از وزن‌های مختلف */
+.light-text {
+    font-weight: 300;
+}
+.normal-text {
+    font-weight: 400;
+}
+.bold-text {
+    font-weight: 700;
+}

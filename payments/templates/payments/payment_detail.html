@@ -1,0 +1,94 @@
+  {% extends 'base.html' %}
+  {% load static %}
+
+  {% block content %}
+  <div class="container mt-5">
+      <div class="row justify-content-center">
+          <div class="col-md-8">
+              <div class="card">
+                  <div class="card-header bg-light">
+                      <h4 class="mb-0">جزئیات پرداخت</h4>
+                  </div>
+                  <div class="card-body">
+                      <!-- اطلاعات پرداخت -->
+                      <div class="payment-info mb-4">
+                          <div class="row">
+                              <div class="col-md-6">
+                                  <p><strong>شماره پرداخت:</strong> {{ payment.id }}</p>
+                                  <p><strong>مبلغ:</strong> {{ payment.amount|intcomma }} تومان</p>
+                                  <p><strong>وضعیت:</strong> 
+                                      <span class="badge {% if payment.status == 'success' %}bg-success
+                                          {% elif payment.status == 'pending' %}bg-warning
+                                          {% else %}bg-danger{% endif %}">
+                                          {{ payment.get_status_display }}
+                                      </span>
+                                  </p>
+                              </div>
+                              <div class="col-md-6">
+                                  <p><strong>تاریخ:</strong> {{ payment.created_at|date:"Y/m/d H:i" }}</p>
+                                  <p><strong>کد پیگیری:</strong> {{ payment.tracking_code|default:"-" }}</p>
+                                  <p><strong>شناسه مرجع:</strong> {{ payment.reference_id|default:"-" }}</p>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- اطلاعات رزرو -->
+                      <div class="booking-info mb-4">
+                          <h5 class="border-bottom pb-2">اطلاعات رزرو</h5>
+                          <div class="row">
+                              <div class="col-md-6">
+                                  <p><strong>اقامتگاه:</strong> {{ payment.booking.property.title }}</p>
+                                  <p><strong>تاریخ ورود:</strong> {{ payment.booking.check_in }}</p>
+                                  <p><strong>تاریخ خروج:</strong> {{ payment.booking.check_out }}</p>
+                              </div>
+                              <div class="col-md-6">
+                                  <p><strong>تعداد مهمان:</strong> {{ payment.booking.guests_count }} نفر</p>
+                                  <p><strong>تعداد شب:</strong> {{ payment.booking.nights_count }} شب</p>
+                                  <p><strong>قیمت هر شب:</strong> {{ payment.booking.property.daily_price|intcomma }} تومان</p>
+                              </div>
+                          </div>
+                      </div>
+
+                      <!-- دکمه‌های عملیات -->
+                      <div class="actions text-center">
+                          {% if payment.status == 'pending' %}
+                              <a href="{% url 'payments:payment_init' payment.booking.id %}" class="btn btn-primary">
+                                  پرداخت مجدد
+                              </a>
+                          {% endif %}
+                        
+                          {% if payment.status == 'success' and payment.can_request_refund %}
+                              <a href="{% url 'payments:payment_refund' payment.id %}" class="btn btn-warning">
+                                  درخواست استرداد
+                              </a>
+                          {% endif %}
+                        
+                          <a href="{% url 'daily_property_detail' payment.booking.property.id %}" class="btn btn-outline-primary">
+                              مشاهده اقامتگاه
+                          </a>
+                        
+                          <a href="{% url 'payments:payment_history' %}" class="btn btn-outline-secondary">
+                              بازگشت به تاریخچه
+                          </a>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  {% endblock %}
+
+  {% block extra_css %}
+  <style>
+      .badge {
+          padding: 8px 12px;
+          font-weight: 500;
+      }
+      .payment-info p, .booking-info p {
+          margin-bottom: 0.5rem;
+      }
+      .actions .btn {
+          margin: 0 5px;
+      }
+  </style>
+  {% endblock %}

@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}داشبورد تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- نوار مسیر -->
+    <nav aria-label="breadcrumb" class="mb-4">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'settlements:settlement-list' %}">تسویه حساب‌ها</a></li>
+            <li class="breadcrumb-item active">داشبورد</li>
+        </ol>
+    </nav>
+
+    <!-- کارت‌های آمار -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center">
+                <h5>کل تسویه‌ها</h5>
+                <h3 class="text-primary">{{ total_amount|intcomma|default:0 }}</h3>
+                <small class="text-muted">{{ total_count|default:0 }} مورد</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center">
+                <h5>در انتظار بررسی</h5>
+                <h3 class="text-warning">{{ pending_count|default:0 }}</h3>
+                <small class="text-muted">{{ pending_amount|intcomma|default:0 }} تومان</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center">
+                <h5>تسویه شده</h5>
+                <h3 class="text-success">{{ completed_count|default:0 }}</h3>
+                <small class="text-muted">{{ completed_amount|intcomma|default:0 }} تومان</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="glass-card p-4 text-center">
+                <h5>نرخ موفقیت</h5>
+                <h3 class="text-info">{{ success_rate|default:0 }}%</h3>
+                <small class="text-muted">در ۳۰ روز گذشته</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- نمودار تسویه‌ها -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <div class="glass-card p-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0">نمودار تسویه‌های ماهانه</h4>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('monthly')">ماهانه</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('weekly')">هفتگی</button>
+                        <button type="button" class="btn btn-outline-primary btn-sm" onclick="updateChart('daily')">روزانه</button>
+                    </div>
+                </div>
+                <canvas id="settlementChart"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card p-4">
+                <h4 class="mb-4">وضعیت تسویه‌ها</h4>
+                <canvas id="statusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- تسویه‌های اخیر -->
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="mb-0">تسویه‌های اخیر</h4>
+            <div>
+                <a href="{% url 'settlements:settlement-create' %}" class="btn btn-primary btn-sm">
+                    <i class="fas fa-plus"></i>
+                    تسویه جدید
+                </a>
+                <a href="{% url 'settlements:settlement-list' %}" class="btn btn-outline-primary btn-sm ms-2">
+                    <i class="fas fa-list"></i>
+                    مشاهده همه
+                </a>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>کد پیگیری</th>
+                        <th>تاریخ</th>
+                        <th>مبلغ</th>
+                        <th>وضعیت</th>
+                        <th>مالک</th>
+                        <th>عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for settlement in recent_settlements %}
+                    <tr>
+                        <td>
+                            <span class="font-monospace">{{ settlement.tracking_code }}</span>
+                        </td>
+                        <td>{{ settlement.created_at|date:"Y/m/d H:i" }}</td>
+                        <td>{{ settlement.amount|intcomma }} تومان</td>
+                        <td>
+                            <span class="badge bg-{{ settlement.status|status_color }}">
+                                {{ settlement.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ settlement.owner.get_full_name }}</td>
+                        <td>
+                            <div class="btn-group">
+                                <a href="{% url 'settlements:settlement-detail' settlement.tracking_code %}" 
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i>
+                                    جزئیات
+                                </a>
+                                {% if settlement.status == 'pending' and user.is_staff %}
+                                <button type="button" 
+                                        class="btn btn-sm btn-outline-success"
+                                        onclick="processSettlement('{{ settlement.tracking_code }}')">
+                                    <i class="fas fa-check"></i>
+                                    پردازش
+                                </button>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-inbox fa-3x mb-3"></i>
+                                <p>هیچ تسویه‌ای یافت نشد</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.glass-card {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.badge {
+    padding: 0.5em 1em;
+}
+
+.table th {
+    font-weight: 600;
+    color: #718096;
+}
+
+.btn-group .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.chart-container {
+    position: relative;
+    height: 300px;
+}
+</style>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+let settlementChart;
+let statusChart;
+
+function initSettlementChart() {
+    const settlementCtx = document.getElementById('settlementChart').getContext('2d');
+    settlementChart = new Chart(settlementCtx, {
+        type: 'line',
+        data: {
+            labels: {{ chart_labels|safe }},
+            datasets: [{
+                label: 'مبلغ تسویه',
+                data: {{ chart_data|safe }},
+                borderColor: '#3498db',
+                backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                },
+                tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString() + ' تومان';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initStatusChart() {
+    const statusCtx = document.getElementById('statusChart').getContext('2d');
+    statusChart = new Chart(statusCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['در انتظار', 'تکمیل شده', 'ناموفق'],
+            datasets: [{
+                data: [{{ pending_count|default:0 }}, {{ completed_count|default:0 }}, {{ failed_count|default:0 }}],
+                backgroundColor: ['#f1c40f', '#2ecc71', '#e74c3c']
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+}
+
+function updateChart(period) {
+    fetch(`/api/settlements/chart-data/?period=${period}`)
+        .then(response => response.json())
+        .then(data => {
+            settlementChart.data.labels = data.labels;
+            settlementChart.data.datasets[0].data = data.values;
+            settlementChart.update();
+        });
+}
+
+function processSettlement(trackingCode) {
+    if (confirm('آیا از پردازش این تسویه اطمینان دارید؟')) {
+        fetch(`/api/settlements/${trackingCode}/process/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                window.location.reload();
+            } else {
+                alert(data.error || 'خطا در پردازش تسویه');
+            }
+        })
+        .catch(error => {
+            alert('خطا در ارتباط با سرور');
+        });
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSettlementChart();
+    initStatusChart();
+});
+</script>
+{% endblock %}
+

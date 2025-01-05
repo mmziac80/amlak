@@ -1,0 +1,92 @@
+
+/* استایل‌های مربوط به کارت پرداخت */
+.payment-card {
+    border-radius: 10px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.payment-card .card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #eee;
+}
+
+/* استایل‌های مربوط به جدول تاریخچه */
+.payment-history-table {
+    width: 100%;
+    margin-top: 20px;
+}
+
+.payment-history-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+}
+
+/* استایل‌های وضعیت پرداخت */
+.payment-status {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+}
+
+.status-success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.status-failed {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* استایل‌های صفحه تایید پرداخت */
+.payment-result-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.payment-details {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.payment-details p {
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+/* استایل‌های فرم فیلتر */
+.payment-filter-form {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.payment-filter-form .form-control {
+    border-radius: 5px;
+}
+
+/* استایل‌های دکمه‌ها */
+.payment-btn {
+    border-radius: 5px;
+    padding: 8px 20px;
+    font-weight: bold;
+}
+
+.payment-btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.payment-btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}

@@ -1,0 +1,92 @@
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h4 class="mb-0">درخواست استرداد وجه</h4>
+                </div>
+                <div class="card-body">
+                    <!-- اطلاعات پرداخت -->
+                    <div class="payment-info mb-4">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>شماره پرداخت:</strong> {{ payment.id }}</p>
+                                <p><strong>مبلغ:</strong> {{ payment.amount|intcomma }} تومان</p>
+                                <p><strong>کد پیگیری:</strong> {{ payment.tracking_code }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>تاریخ پرداخت:</strong> {{ payment.created_at|date:"Y/m/d H:i" }}</p>
+                                <p><strong>اقامتگاه:</strong> {{ payment.booking.property.title }}</p>
+                                <p><strong>وضعیت:</strong> {{ payment.get_status_display }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- فرم درخواست استرداد -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">دلیل درخواست استرداد</label>
+                            {{ form.reason }}
+                            {% if form.reason.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.reason.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">شماره شبا</label>
+                            {{ form.bank_account }}
+                            {% if form.bank_account.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.bank_account.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                شماره شبا باید با IR شروع شود و 26 رقم باشد
+                            </div>
+                        </div>
+
+                        <!-- قوانین استرداد -->
+                        <div class="alert alert-info mb-4">
+                            <h6 class="alert-heading mb-2">قوانین استرداد:</h6>
+                            <ul class="mb-0">
+                                <li>درخواست استرداد تا 24 ساعت قبل از تاریخ ورود امکان‌پذیر است</li>
+                                <li>در صورت تایید، مبلغ حداکثر تا 72 ساعت کاری به حساب شما واریز می‌شود</li>
+                                <li>10% از مبلغ کل به عنوان کارمزد کسر خواهد شد</li>
+                            </ul>
+                        </div>
+
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary">
+                                ثبت درخواست استرداد
+                            </button>
+                            <a href="{% url 'payments:payment_detail' payment.id %}" class="btn btn-outline-secondary">
+                                انصراف
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .payment-info p {
+        margin-bottom: 0.5rem;
+    }
+    .alert ul {
+        padding-right: 20px;
+    }
+</style>
+{% endblock %}

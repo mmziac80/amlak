@@ -1,0 +1,229 @@
+/* CSS Variables */
+:root {
+    --ai-primary: #00f2fe;
+    --ai-secondary: #4facfe;
+    --ai-dark: #0a192f;
+    --ai-darker: #060c17;
+    --ai-glow: 0 0 10px rgba(0, 242, 254, 0.5);
+}
+
+/* Base Theme */
+.ai-theme {
+    /* Fallback colors */
+    background: #1a1a1a;
+    color: #f8f9fa;
+    /* Modern browsers */
+    background: var(--ai-dark, #1a1a1a);
+    color: var(--ai-light, #f8f9fa);
+    font-family: 'Vazirmatn', sans-serif;
+}
+
+/* Glass Effect Base Styles */
+.glass-nav,
+.glass-menu,
+.glass-card,
+.glass-footer {
+    /* Base styles for all browsers */
+    background: rgba(26, 26, 26, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    
+    /* Safari 9+ specific */
+    -webkit-backdrop-filter: blur(10px);
+    
+    /* Modern browsers */
+    @supports (backdrop-filter: blur(10px)) {
+        backdrop-filter: blur(10px);
+        background: rgba(26, 26, 26, 0.8);
+    }
+}
+
+/* Individual Glass Elements */
+.glass-nav {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.glass-card {
+    border-radius: 15px;
+}
+
+.glass-footer {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+/* Glowing Elements */
+.glow-text {
+    /* Fallback color */
+    color: #00f2fe;
+    /* Modern browsers */
+    color: var(--ai-primary, #00f2fe);
+    /* Fallback shadow */
+    text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+    /* Modern browsers */
+    text-shadow: var(--ai-glow, 0 0 10px rgba(0, 242, 254, 0.5));
+}
+
+.btn-glow {
+    /* Fallback gradient */
+    background: linear-gradient(45deg, #00f2fe, #4facfe);
+    /* Modern browsers */
+    background: linear-gradient(45deg, var(--ai-primary, #00f2fe), var(--ai-secondary, #4facfe));
+    border: none;
+    /* Fallback color */
+    color: #1a1a1a;
+    /* Modern browsers */
+    color: var(--ai-dark, #1a1a1a);
+    /* Fallback shadow */
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+    /* Modern browsers */
+    box-shadow: var(--ai-glow, 0 0 10px rgba(0, 242, 254, 0.5));
+    transition: opacity 0.3s ease;
+}
+
+.btn-glow:hover {
+    opacity: 0.9;
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.7);
+}
+
+/* Icons & Animations */
+.ai-icon {
+    /* Fallback color */
+    color: #00f2fe;
+    /* Modern browsers */
+    color: var(--ai-primary, #00f2fe);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+/* Form Elements */
+.glass-input {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Fallback color */
+    color: #f8f9fa;
+    /* Modern browsers */
+    color: var(--ai-light, #f8f9fa);
+    padding-right: 40px;
+    transition: background-color 0.3s ease;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.15);
+    /* Fallback shadow */
+    box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+    /* Modern browsers */
+    box-shadow: var(--ai-glow, 0 0 10px rgba(0, 242, 254, 0.5));
+    /* Fallback border */
+    border-color: #00f2fe;
+    /* Modern browsers */
+    border-color: var(--ai-primary, #00f2fe);
+}
+
+/* Interactive Elements */
+.footer-link,
+.social-icon {
+    color: var(--ai-light, #f8f9fa);
+    transition: all 0.3s ease;
+}
+
+.social-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 0 0.5rem;
+}
+
+.footer-link:hover,
+.social-icon:hover {
+    color: var(--ai-primary, #00f2fe);
+    background: rgba(0, 242, 254, 0.1);
+    transform: translateY(-3px);
+    box-shadow: var(--ai-glow);
+}
+
+/* Chat Components */
+.chat-container {
+    height: 400px;
+    overflow-y: auto;
+    padding: 1rem;
+}
+
+.message {
+    margin-bottom: 1rem;
+    max-width: 70%;
+}
+
+.message.sent {
+    margin-left: auto;
+    /* Fallback background */
+    background: #00f2fe;
+    /* Modern browsers */
+    background: var(--ai-primary, #00f2fe);
+}
+
+.message.received {
+    margin-right: auto;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body {
+    font-family: 'Vazir', sans-serif;
+    background: linear-gradient(135deg, var(--ai-darker), var(--ai-dark));
+    color: #00f2fe;
+    min-height: 100vh;
+}
+
+
+
+.navbar .dropdown-menu { z-index: 1001; }
+.user-dropdown { z-index: 1001; }
+.booking-form-container { z-index: 50; }
+
+
+.glass-input {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--ai-primary);
+    box-shadow: var(--ai-glow);
+    color: #fff;
+}
+
+
+.btn-glow:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--ai-glow);
+}
+
+
+
+.btn-outline-glow:hover {
+    background: var(--ai-primary);
+    color: var(--ai-dark);
+    box-shadow: var(--ai-glow);
+}
+
+.glow-text {
+    color: var(--ai-primary);
+    text-shadow: var(--ai-glow);
+}
+
+.glow-icon { color: var(--ai-primary); }
+
+
+
+.swiper-button-next,
+.swiper-button-prev { color: var(--ai-primary); }
+
+.swiper-pagination-bullet-active { background: var(--ai-primary); }

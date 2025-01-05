@@ -1,0 +1,69 @@
+{% extends "emails/base.html" %}
+
+{% block title %}درخواست تسویه حساب{% endblock %}
+
+{% block content %}
+<div class="email-container" style="direction: rtl; font-family: Vazir, Tahoma; max-width: 600px; margin: 0 auto; padding: 20px;">
+    <div class="header" style="text-align: center; margin-bottom: 30px;">
+        <img src="{{ site_logo }}" alt="لوگو" style="max-width: 150px;">
+        <h2 style="color: #f39c12; margin-top: 20px;">درخواست تسویه حساب</h2>
+    </div>
+    
+    <div class="settlement-details" style="background: #fff8e1; border-radius: 10px; padding: 20px; margin-bottom: 20px;">
+        <p style="font-size: 16px; color: #2c3e50;">{{ user.get_full_name }} عزیز</p>
+        <p style="font-size: 16px; color: #2c3e50; margin-bottom: 20px;">درخواست تسویه حساب شما با موفقیت ثبت شد و در حال بررسی است.</p>
+        
+        <div class="details-box" style="background: white; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">مبلغ درخواستی:</span>
+                <span class="value" style="color: #2c3e50; font-weight: bold;">{{ amount|intcomma }} تومان</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <span class="label" style="color: #7f8c8d;">کد پیگیری:</span>
+                <span class="value" style="color: #2980b9; font-family: monospace;">{{ tracking_code }}</span>
+            </div>
+            <div class="detail-row" style="display: flex; justify-content: space-between;">
+                <span class="label" style="color: #7f8c8d;">تاریخ درخواست:</span>
+                <span class="value" style="color: #2c3e50;">{{ request_date|date:"Y/m/d H:i" }}</span>
+            </div>
+        </div>
+        
+        <div class="info-box" style="background: #f7f9fa; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+            <h4 style="color: #2980b9; margin-top: 0;">مراحل بعدی:</h4>
+            <ol style="color: #34495e; margin: 10px 0;">
+                <li>بررسی درخواست توسط تیم مالی (حداکثر 24 ساعت)</li>
+                <li>تایید و پردازش درخواست</li>
+                <li>واریز وجه به حساب بانکی شما</li>
+                <li>ارسال پیامک و ایمیل تاییدیه</li>
+            </ol>
+        </div>
+        
+        <div class="note" style="background: #e8f6f3; border-right: 4px solid #1abc9c; padding: 15px; border-radius: 4px;">
+            <p style="margin: 0; color: #16a085;">
+                در صورت نیاز به پیگیری، کد پیگیری را به همراه داشته باشید.
+            </p>
+        </div>
+    </div>
+    
+    <div class="tracking-info" style="text-align: center; margin-top: 30px;">
+        <a href="{{ tracking_url }}" class="btn" style="background-color: #3498db; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px;">
+            پیگیری وضعیت تسویه
+        </a>
+    </div>
+
+    <div class="support-info" style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #ecf0f1;">
+        <p style="color: #7f8c8d; font-size: 14px;">
+            ساعات پاسخگویی پشتیبانی: همه روزه از ساعت 8 صبح تا 8 شب
+        </p>
+        <div class="support-contacts" style="margin-top: 15px;">
+            <p style="margin: 5px 0; color: #7f8c8d;">تلفن پشتیبانی: {{ SUPPORT_PHONE }}</p>
+            <p style="margin: 5px 0; color: #7f8c8d;">ایمیل پشتیبانی: {{ SUPPORT_EMAIL }}</p>
+        </div>
+        <div class="social-links" style="margin-top: 20px;">
+            <a href="{{ SOCIAL_INSTAGRAM }}" style="color: #e1306c; margin: 0 10px;">Instagram</a>
+            <a href="{{ SOCIAL_TELEGRAM }}" style="color: #0088cc; margin: 0 10px;">Telegram</a>
+            <a href="{{ SOCIAL_TWITTER }}" style="color: #1da1f2; margin: 0 10px;">Twitter</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

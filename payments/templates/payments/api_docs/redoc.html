@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>API مستندات پرداخت | املاک مشهد</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        direction: rtl;
+        font-family: Vazir, Tahoma, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <redoc spec-url="{% url 'schema-json' 'payments' %}"></redoc>
+    <script src="https://cdn.jsdelivr.net/npm/redoc@next/bundles/redoc.standalone.js"></script>
+    <script>
+      // تنظیمات سفارشی ReDoc
+      Redoc.init(
+        "{% url 'schema-json' 'payments' %}", 
+        {
+          theme: {
+            colors: {
+              primary: {
+                main: '#1976d2'
+              }
+            },
+            typography: {
+              fontFamily: 'Vazir, Tahoma, sans-serif',
+              headings: {
+                fontFamily: 'Vazir, Tahoma, sans-serif',
+              }
+            },
+            sidebar: {
+              width: '300px'
+            }
+          },
+          expandResponses: "200,201",
+          hideDownloadButton: true,
+          hideLoading: true,
+          nativeScrollbars: true,
+          requiredPropsFirst: true,
+          sortPropsAlphabetically: true,
+          hideHostname: true
+        }
+      );
+    </script>
+  </body>
+</html>
