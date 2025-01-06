@@ -11,8 +11,16 @@ const LocationPicker = ({ onLocationSelect, initialLocation = null, dealType = '
 
     // مدیریت مارکر اولیه
     useEffect(() => {
+        console.log('Initial location:', initialLocation);
+        if (map) {
+            map.on('click', handleMapClick);
+            console.log('Click handler attached');
+        }
+
         if (map && initialLocation) {
             // حذف مارکر قبلی اگر وجود داره
+            console.log('map', map);
+            
             if (marker) {
                 marker.remove();
             }
@@ -41,7 +49,9 @@ const LocationPicker = ({ onLocationSelect, initialLocation = null, dealType = '
     }, [map, initialLocation, dealType]);
 
     const handleMapClick = (e) => {
-        if (!map) return;
+        console.log('Map clicked:', e , map);
+        
+        // if (!map) return;
 
         // حذف مارکر قبلی
         if (marker) {
@@ -91,8 +101,6 @@ const LocationPicker = ({ onLocationSelect, initialLocation = null, dealType = '
                 mapSetter={(mapInstance) => {
                     console.log('Map instance created:', mapInstance);
                     setMap(mapInstance);
-                    mapInstance.on('click', handleMapClick);
-                    console.log('Click handler attached');
                 }}
                 
                 className="w-full h-full"

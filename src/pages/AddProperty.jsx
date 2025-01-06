@@ -56,6 +56,8 @@ function AddProperty() {
     check_out_time: '12:00'
   });
 
+  const [errors, setErrors] = useState([]);
+
   // تست تغییر نوع معامله - اضافه کردن قبل از dealTypes
   const handleDealTypeChange = (type) => {
     console.log('Deal type changed to:', type);
